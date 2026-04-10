@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSTI — Industri 4.0 Control Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <style>
+    :root {
+      --bg:        #0b0e11;
+      --surface:   #111417;
+      --panel:     #161a1f;
+      --border:    #222730;
+      --border2:   #2e3540;
+      --text:      #d0d8e4;
+      --muted:     #5a6476;
+      --green:     #00c97a;
+      --amber:     #f5a623;
+      --red:       #f04d4d;
+      --blue:      #4da6ff;
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(77,166,255,.015) 1px, transparent 1px), linear-gradient(90deg, rgba(77,166,255,.015) 1px, transparent 1px);
+      background-size: 40px 40px; z-index: 0; pointer-events: none;
+    }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
+      font-family: var(--mono); font-size: 11px; position: relative; z-index: 10;
+    }
+    .topbar-left, .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+    .main { position: relative; z-index: 1; padding: 20px; display: flex; flex-direction: column; gap: 20px; max-width: 1000px; margin: 0 auto; width: 100%; }
+
+    .section-label { font-family: var(--mono); font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--muted); display:flex; align-items:center; gap:10px; margin-bottom: 12px; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    /* ── METRICS ── */
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .metric-card { background: var(--panel); border: 1px solid var(--border); padding: 14px 16px; border-radius: 4px; position:relative; overflow:hidden; }
+    .metric-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: var(--blue); }
+    .metric-label { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 8px; text-transform:uppercase; }
+    .metric-value { font-family: var(--mono); font-size: 20px; font-weight: 600; }
+    .metric-value span { font-size: 11px; color: var(--muted); margin-left:4px; }
+
+    /* ── RELAYS ── */
+    .relay-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .relay-card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+    .relay-card.active { border-color: rgba(0,201,122,0.3); background: rgba(0,201,122,0.02); }
+    .relay-card-top { display: flex; justify-content: space-between; align-items: center; }
+    
+    .toggle-wrap { position:relative; height:32px; display:flex; }
+    .toggle-wrap input { opacity:0; position:absolute; inset:0; cursor:pointer; z-index:2; }
+    .toggle-btn { display:flex; align-items:center; padding:0 12px; font-family:var(--mono); font-size:11px; font-weight:600; border: 1px solid var(--border2); background: #1e252e; color: var(--muted); }
+    input:checked ~ .toggle-btn.on { background: rgba(0,201,122,.2); color: var(--green); border-color: var(--green); }
+    input:not(:checked) ~ .toggle-btn.off { background: rgba(0,201,122,.2); color: var(--green); border-color: var(--green); }
+
+    /* ── AUTOMATION PANEL ── */
+    .auto-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 16px; display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+    .auto-form { display: flex; flex-direction: column; gap: 10px; border-right: 1px solid var(--border); padding-right: 20px; }
+    .auto-list { max-height: 200px; overflow-y: auto; }
+    input[type="time"], select { background: #0d1014; border: 1px solid var(--border); color: var(--text); font-family: var(--mono); padding: 5px; border-radius: 3px; }
+
+    .btn-primary { padding: 8px 12px; background: rgba(77,166,255,0.1); border: 1px solid var(--border); color: var(--blue); font-family: var(--mono); font-size: 10px; font-weight:600; cursor:pointer; text-transform:uppercase; border-radius:3px; }
+    .btn-primary:hover { border-color: var(--blue); }
+
+    .chart-container { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 16px; height: 260px; }
+    
+    table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10px; }
+    th { color: var(--muted); text-align: left; padding: 5px; background: var(--surface); }
+    td { padding: 5px; border-bottom: 1px solid var(--border2); }
+
+    @media (max-width: 768px) { .metrics-grid, .relay-grid, .auto-panel { grid-template-columns: 1fr; } .auto-form { border-right:none; border-bottom:1px solid var(--border); padding-bottom:20px; } }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <span style="font-weight:600;color:var(--text);font-size:12px">PSTI · Control Center</span>
+      <span style="color:var(--border); margin:0 10px">|</span>
+      <span>NODE: <span style="color:var(--text)">ESP32 DevKit</span></span>
+    </div>
+    <div class="topbar-right">
+      <span id="clock" style="color:var(--text);font-weight:500;"></span>
+      <span style="background:rgba(0,201,122,.15);border:1px solid rgba(0,201,122,.3);border-radius:2px;color:var(--green);font-family:var(--mono);font-size:10px;font-weight:600;padding:4px 8px; display:flex; align-items:center; gap:4px;">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--green);"></span>Online
+      </span>
+      <button onclick="window.location.href='statistics-i40.html'" class="btn-primary" style="color:var(--amber)">📈 Statistik</button>
+      <button onclick="window.location.href='laporan-i40.html'" class="btn-primary" style="color:var(--green)">📋 Laporan</button>
+    </div>
+  </div>
+
+  <main class="main">
+    <div class="section-label">Performance & Costs</div>
+    <div class="metrics-grid">
+      <div class="metric-card"><div class="metric-label">Power Load</div><div class="metric-value" id="k-p">0<span>W</span></div></div>
+      <div class="metric-card" style="border-color:var(--amber)"><div class="metric-label">Billing Estimate</div><div class="metric-value" id="k-c" style="color:var(--amber)">Rp 0</div></div>
+      <div class="metric-card"><div class="metric-label">Relay Status</div><div class="metric-value" id="k-r">0<span>/ 4</span></div></div>
+      <div class="metric-card"><div class="metric-label">System Uptime</div><div class="metric-value" id="k-u">00:00:00</div></div>
+    </div>
+
+    <div class="section-label">Smart Scheduler (Automation)</div>
+    <div class="auto-panel">
+      <div class="auto-form">
+        <label style="font-size:9px; color:var(--muted)">ADD NEW SCHEDULE</label>
+        <select id="scRelay"><option value="1">Relay 01</option><option value="2">Relay 02</option><option value="3">Relay 03</option><option value="4">Relay 04</option></select>
+        <div style="display:flex; gap:10px">
+          <div style="flex:1"><label style="font-size:8px; color:var(--muted)">ON TIME</label><input type="time" id="scOn" style="width:100%"></div>
+          <div style="flex:1"><label style="font-size:8px; color:var(--muted)">OFF TIME</label><input type="time" id="scOff" style="width:100%"></div>
+        </div>
+        <button class="btn-primary" onclick="addSchedule()">Save Schedule</button>
+      </div>
+      <div class="auto-list">
+        <table><thead><tr><th>RELAY</th><th>ON</th><th>OFF</th><th>ACTION</th></tr></thead><tbody id="scTable"></tbody></table>
+      </div>
+    </div>
+
+    <div class="section-label">Relay Controller</div>
+    <div class="relay-grid" id="relayGrid"></div>
+
+    <div class="section-label">Live Power Trend</div>
+    <div class="chart-container"><canvas id="pChart"></canvas></div>
+  </main>
+
+  <script>
+    const API_BASE = '/api';
+    let chart, upTime = 0, tariff = 1444.7;
+
+    async function api(method, url, body) {
+        const token = sessionStorage.getItem('auth_token');
+        const res = await fetch(`${API_BASE}${url}`, {
+            method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: body ? JSON.stringify(body) : null
+        });
+        return res.json();
+    }
+
+    async function loadConfig() {
+        const set = await api('GET', '/settings/electricity_tariff');
+        if(set.value) tariff = parseFloat(set.value);
+        loadSchedules();
+    }
+
+    async function loadSchedules() {
+        const list = await api('GET', '/schedules');
+        document.getElementById('scTable').innerHTML = list.map(s => `
+            <tr>
+                <td>RELAY 0${s.relay_id}</td>
+                <td style="color:var(--green)">${s.on_time.substring(0,5)}</td>
+                <td style="color:var(--red)">${s.off_time.substring(0,5)}</td>
+                <td><button onclick="delSchedule(${s.id})" style="background:none; border:none; color:var(--red); cursor:pointer">X</button></td>
+            </tr>
+        `).join('');
+    }
+
+    async function addSchedule() {
+        const relay_id = document.getElementById('scRelay').value;
+        const on_time = document.getElementById('scOn').value;
+        const off_time = document.getElementById('scOff').value;
+        if(!on_time || !off_time) return alert('Set both times!');
+        await api('POST', '/schedules', { relay_id, on_time, off_time });
+        loadSchedules();
+    }
+
+    async function delSchedule(id) {
+        await api('DELETE', `/schedules/${id}`);
+        loadSchedules();
+    }
+
+    async function toggleRelay(id, state) {
+        await api('PUT', `/relays/${id}`, { state: state ? 1 : 0 });
+    }
+
+    async function sync() {
+        try {
+            const token = sessionStorage.getItem('auth_token');
+            if (!token) {
+                console.warn('No token found, redirecting to login...');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Sync Sensors
+            try {
+                const data = await api('GET', '/sensors/latest');
+                if (data && !data.error) {
+                    const pVal = parseFloat(data.power) || 0;
+                    const eVal = parseFloat(data.energy) || 0;
+                    
+                    document.getElementById('k-p').innerHTML = Math.round(pVal) + '<span>W</span>';
+                    const cost = (eVal * tariff).toLocaleString('id-ID');
+                    document.getElementById('k-c').textContent = `Rp ${cost}`;
+                    
+                    if (chart) {
+                        chart.data.labels.push(""); 
+                        chart.data.datasets[0].data.push(pVal);
+                        if(chart.data.labels.length > 20) { 
+                            chart.data.labels.shift(); 
+                            chart.data.datasets[0].data.shift(); 
+                        }
+                        chart.update('none');
+                    }
+                } else if (data && data.error === 'Invalid token') {
+                    window.location.href = 'login.html';
+                }
+            } catch (e) {
+                console.error('Sensors sync error:', e);
+            }
+
+            // Sync Relays
+            try {
+                const relays = await api('GET', '/relays');
+                if (relays && Array.isArray(relays)) {
+                    let active = 0;
+                    document.getElementById('relayGrid').innerHTML = relays.map(r => {
+                        if(r.state) active++;
+                        return `
+                        <div class="relay-card ${r.state ? 'active' : ''}">
+                            <div class="relay-card-top">
+                                <div style="font-weight:600">Output 0${r.id}</div>
+                                <div class="toggle-wrap">
+                                    <input type="checkbox" ${r.state ? 'checked' : ''} onchange="toggleRelay(${r.id}, this.checked)">
+                                    <span class="toggle-btn off" style="border-radius:4px 0 0 4px; border-right:none">OFF</span>
+                                    <span class="toggle-btn on" style="border-radius:0 4px 4px 0">ON</span>
+                                </div>
+                            </div>
+                            <div style="font-size:10px; color:var(--muted); margin-top:10px">
+                                Status: ${r.state ? '<span style="color:var(--green)">ACTIVE</span>' : 'IDLE'}
+                            </div>
+                        </div>`;
+                    }).join('');
+                    document.getElementById('k-r').innerHTML = active + '<span>/ 4</span>';
+                }
+            } catch (e) {
+                console.error('Relays sync error:', e);
+            }
+
+        } catch(e) {
+            console.error('General sync error:', e);
+        }
+    }
+
+    function initChart() {
+        const ctx = document.getElementById('pChart').getContext('2d');
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'W', data: [], borderColor: '#4da6ff', tension: 0.3, fill: true, backgroundColor: 'rgba(77,166,255,0.05)' }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#222730' }, ticks: { color: '#5a6476' } }, x: { display:false } } }
+        });
+    }
+
+    setInterval(() => {
+        upTime++;
+        const h = String(Math.floor(upTime/3600)).padStart(2,'0');
+        const m = String(Math.floor((upTime%3600)/60)).padStart(2,'0');
+        const s = String(upTime%60).padStart(2,'0');
+        document.getElementById('k-u').textContent = `${h}:${m}:${s}`;
+        document.getElementById('clock').textContent = new Date().toLocaleTimeString('id-id');
+    }, 1000);
+
+    initChart(); loadConfig(); sync(); setInterval(sync, 3000);
+  </script>
+</body>
+</html>

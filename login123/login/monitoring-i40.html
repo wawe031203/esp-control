@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSTI · Live Monitoring</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #0b0e11;
+            --sidebar: #111417;
+            --card: #161a20;
+            --border: #222730;
+            --text-main: #d0d8e4;
+            --text-dim: #5a6476;
+            --accent: #4da6ff;
+            --amber: #f5a623;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 0;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand {
+            padding: 0 24px 20px 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-brand h2 { font-size: 14px; color: var(--text-main); margin-bottom: 10px; }
+
+        .brand-info {
+            font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim);
+            display: flex; flex-direction: column; gap: 4px;
+        }
+
+        .nav-menu { display: flex; flex-direction: column; gap: 4px; padding: 0 12px; }
+
+        .nav-item {
+            padding: 12px 16px; border-radius: 4px; font-size: 13px; font-weight: 500;
+            text-decoration: none; color: var(--text-dim); display: flex; align-items: center; gap: 12px;
+        }
+
+        .nav-item:hover { color: var(--text-main); }
+        .nav-item.active { background-color: rgba(77, 166, 255, 0.1); color: var(--accent); }
+
+        /* ── MAIN CONTENT ── */
+        .content { flex: 1; padding: 30px; max-width: 1200px; }
+
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .page-title { font-size: 20px; font-weight: 600; }
+
+        .chart-box {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 4px;
+            height: 400px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: var(--card);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .stat-lab { font-size: 10px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
+        .stat-val { font-size: 20px; font-weight: 600; font-family: 'IBM Plex Mono'; }
+
+        @media (max-width: 1000px) {
+            .grid { grid-template-columns: repeat(2, 1fr); }
+            body { flex-direction: column; }
+            .sidebar { width: 100%; border-right: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <h2>PSTI · Monitoring Energi</h2>
+            <div class="brand-info">
+                <span>| NODE ESP32 DevKit</span>
+                <span>| RELAY 4 Channel</span>
+                <span>| SENSOR PZEM-004T</span>
+            </div>
+        </div>
+
+        <nav class="nav-menu">
+            <a href="relay-control-i40.html" class="nav-item">◄ Dasbor</a>
+            <a href="monitoring-i40.html" class="nav-item active">📊 Monitor</a>
+            <a href="statistics-i40.html" class="nav-item">📈 Statistik</a>
+            <a href="laporan-i40.html" class="nav-item">📋 Laporan</a>
+            <br>
+            <a href="#" onclick="logout()" class="nav-item" style="color: var(--red);">Logout</a>
+        </nav>
+    </div>
+
+    <div class="content">
+        <div class="page-header">
+            <h1 class="page-title">Live Performance Analysis</h1>
+        </div>
+
+        <div class="grid">
+            <div class="stat-card">
+                <div class="stat-lab">Voltage</div>
+                <div class="stat-val" id="v">0.0V</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-lab">Current</div>
+                <div class="stat-val" id="i">0.00A</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-lab">Power</div>
+                <div class="stat-val" id="p" style="color: var(--amber);">0W</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-lab">Energy</div>
+                <div class="stat-val" id="e" style="color: var(--accent);">0.000kWh</div>
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <canvas id="liveChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let chart;
+
+        function initChart() {
+            const ctx = document.getElementById('liveChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Power (W)',
+                        borderColor: '#f5a623',
+                        borderWidth: 2,
+                        fill: false,
+                        data: []
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { display: false },
+                        y: { grid: { color: '#222730' }, ticks: { color: '#5a6476' } }
+                    },
+                    plugins: { legend: { labels: { color: '#d0d8e4' } } }
+                }
+            });
+        }
+
+        async function updateData() {
+            try {
+                const token = sessionStorage.getItem('auth_token');
+                if (!token) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const res = await fetch(`${API_BASE}/sensors/latest`, { 
+                    headers: { 'Authorization': `Bearer ${token}` } 
+                });
+                const data = await res.json();
+
+                if (data && data.error === 'Invalid token') {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                if (data && data.id) {
+                    const vVal = parseFloat(data.voltage) || 0;
+                    const iVal = parseFloat(data.current) || 0;
+                    const pVal = parseFloat(data.power) || 0;
+                    const eVal = parseFloat(data.energy) || 0;
+
+                    document.getElementById('v').textContent = vVal.toFixed(1) + 'V';
+                    document.getElementById('i').textContent = iVal.toFixed(2) + 'A';
+                    document.getElementById('p').textContent = Math.round(pVal) + 'W';
+                    document.getElementById('e').textContent = eVal.toFixed(3) + 'kWh';
+
+                    const now = new Date().toLocaleTimeString();
+                    if (chart) {
+                        chart.data.labels.push(now);
+                        chart.data.datasets[0].data.push(pVal);
+                        if (chart.data.labels.length > 30) {
+                            chart.data.labels.shift();
+                            chart.data.datasets[0].data.shift();
+                        }
+                        chart.update('none');
+                    }
+                }
+            } catch(e) {
+                console.error('Update monitoring data failed:', e);
+            }
+        }
+
+        function logout() { sessionStorage.clear(); window.location.href = 'login.html'; }
+
+        initChart();
+        setInterval(updateData, 2000);
+        updateData();
+    </script>
+</body>
+</html>

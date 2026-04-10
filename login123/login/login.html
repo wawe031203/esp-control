@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSTI — Login Operator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0b0e11;
+      --surface:   #111417;
+      --panel:     #161a1f;
+      --border:    #222730;
+      --border2:   #2e3540;
+      --text:      #d0d8e4;
+      --muted:     #5a6476;
+      --green:     #00c97a;
+      --green-dim: rgba(0,201,122,.12);
+      --amber:     #f5a623;
+      --red:       #f04d4d;
+      --red-dim:   rgba(240,77,77,.14);
+      --blue:      #4da6ff;
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── GRID BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(77,166,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(77,166,255,.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      position: relative; z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .topbar-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 600; color: var(--text); letter-spacing: .06em; font-size: 12px;
+    }
+    .brand-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 6px var(--green);
+      animation: glow 2s ease-in-out infinite;
+    }
+    @keyframes glow { 0%,100%{opacity:1;box-shadow:0 0 6px var(--green)} 50%{opacity:.6;box-shadow:0 0 2px var(--green)} }
+    .topbar-right { display:flex; gap:20px; }
+    .tb-item span:first-child { color: var(--muted); margin-right:4px; }
+    .tb-item span:last-child  { color: var(--text); font-weight:500; }
+
+    /* ── MAIN ── */
+    .page {
+      position: relative; z-index: 1;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .login-wrap {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ── PLANT HEADER ── */
+    .plant-header {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      padding: 20px 28px 18px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .plant-icon {
+      width: 44px; height: 44px;
+      border: 1px solid var(--border2);
+      border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .plant-icon svg { width: 22px; height: 22px; color: var(--blue); }
+    .plant-title {
+      font-size: 15px; font-weight: 600; color: var(--text); line-height: 1;
+    }
+    .plant-sub {
+      font-family: var(--mono); font-size: 10px;
+      color: var(--muted); margin-top: 5px;
+      letter-spacing: .06em; text-transform: uppercase;
+    }
+
+    /* ── DIVIDER BAR ── */
+    .divider-bar {
+      height: 2px;
+      background: linear-gradient(90deg, var(--blue) 0%, var(--green) 60%, transparent 100%);
+      opacity: .6;
+    }
+
+    /* ── FORM PANEL ── */
+    .form-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      padding: 28px;
+    }
+
+    .form-label-row {
+      font-family: var(--mono); font-size: 10px;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 18px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .form-label-row::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    .field { margin-bottom: 16px; }
+    .field-label {
+      font-family: var(--mono); font-size: 10px;
+      font-weight: 500; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 7px; display: block;
+    }
+    .field-wrap {
+      position: relative;
+    }
+    .field-wrap svg {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      width: 15px; height: 15px; color: var(--muted);
+      pointer-events: none;
+    }
+    .field input {
+      width: 100%;
+      background: #0d1014;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 10px 12px 10px 36px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      letter-spacing: .04em;
+    }
+    .field input::placeholder { color: var(--muted); }
+    .field input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(77,166,255,.1);
+    }
+    .field input.error {
+      border-color: var(--red);
+      box-shadow: 0 0 0 3px var(--red-dim);
+    }
+
+    /* ── ACCESS LEVEL ── */
+    .access-row {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px; margin-bottom: 20px;
+    }
+    .access-opt { position: relative; }
+    .access-opt input { position:absolute; opacity:0; inset:0; cursor:pointer; margin:0; }
+    .access-tile {
+      padding: 8px 6px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .access-tile-label {
+      font-family: var(--mono); font-size: 9px; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+      display: block; margin-bottom: 2px;
+    }
+    .access-tile-name {
+      font-size: 11px; font-weight: 500; color: var(--text);
+    }
+    .access-opt input:checked + .access-tile {
+      border-color: var(--blue);
+      background: rgba(77,166,255,.08);
+    }
+    .access-opt input:checked + .access-tile .access-tile-label { color: var(--blue); }
+
+    /* ── LOGIN BUTTON ── */
+    .btn-login {
+      width: 100%;
+      padding: 12px;
+      background: rgba(77,166,255,.12);
+      border: 1px solid rgba(77,166,255,.35);
+      border-radius: 3px;
+      color: var(--blue);
+      font-family: var(--mono);
+      font-size: 12px; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background .2s, border-color .2s, color .2s;
+      margin-top: 4px;
+    }
+    .btn-login:hover:not(:disabled) {
+      background: rgba(77,166,255,.22);
+      border-color: var(--blue);
+      color: #fff;
+    }
+    .btn-login:active:not(:disabled) { transform: scale(.99); }
+    .btn-login:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* ── ERROR MSG ── */
+    .error-msg {
+      display: none;
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: var(--red-dim);
+      border: 1px solid rgba(240,77,77,.25);
+      border-radius: 3px;
+      font-family: var(--mono); font-size: 11px; color: var(--red);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .error-msg.hidden { display: none; }
+    .error-msg svg { width:14px; height:14px; flex-shrink:0; }
+
+    /* ── FOOTER INFO ── */
+    .form-footer {
+      margin-top: 20px;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .info-tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 9px 12px;
+    }
+    .info-tile-label { font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:3px; }
+    .info-tile-val   { font-family:var(--mono); font-size:11px; font-weight:500; color:var(--text); }
+    .dot-green { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--green); margin-right:5px; }
+
+    /* ── BOTTOM FOOTNOTE ── */
+    .footnote {
+      text-align: center; margin-top: 20px;
+      font-family: var(--mono); font-size: 10px;
+      color: var(--muted); letter-spacing: .04em;
+    }
+
+    /* ── LOADING OVERLAY ── */
+    .loading-overlay {
+      display: none;
+      position: fixed; inset: 0; z-index: 99;
+      background: rgba(11,14,17,.85);
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px;
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 2px solid var(--border2);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      font-family: var(--mono); font-size: 12px;
+      color: var(--muted); letter-spacing: .08em;
+    }
+
+    /* ── RESPONSIVE DESIGN ── */
+    @media (max-width: 768px) {
+      .page {
+        padding: 30px 15px;
+      }
+      .login-wrap {
+        max-width: 90%;
+      }
+      .plant-header {
+        padding: 16px 20px;
+      }
+      .plant-icon {
+        width: 40px;
+        height: 40px;
+      }
+      .plant-icon svg {
+        width: 20px;
+        height: 20px;
+      }
+      .plant-title {
+        font-size: 14px;
+      }
+      .form-panel {
+        padding: 24px;
+      }
+      .field input {
+        font-size: 12px;
+        padding: 9px 10px 9px 34px;
+      }
+      .field-wrap svg {
+        width: 14px;
+        height: 14px;
+      }
+      .topbar-right {
+        display: flex;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        font-size: 14px;
+      }
+      .topbar {
+        padding: 8px 12px;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .topbar-brand {
+        font-size: 11px;
+        letter-spacing: .04em;
+      }
+      .brand-dot {
+        width: 6px;
+        height: 6px;
+      }
+      .topbar-right {
+        flex-direction: column;
+        gap: 6px;
+        font-size: 9px;
+        width: 100%;
+      }
+      .page {
+        padding: 20px 10px;
+      }
+      .login-wrap {
+        max-width: 100%;
+      }
+      .plant-header {
+        padding: 14px 16px;
+        gap: 12px;
+      }
+      .plant-icon {
+        width: 36px;
+        height: 36px;
+      }
+      .plant-icon svg {
+        width: 18px;
+        height: 18px;
+      }
+      .plant-title {
+        font-size: 13px;
+      }
+      .plant-sub {
+        font-size: 8px;
+        margin-top: 3px;
+      }
+      .form-panel {
+        padding: 18px;
+      }
+      .form-label-row {
+        font-size: 9px;
+        margin-bottom: 14px;
+      }
+      .field {
+        margin-bottom: 14px;
+      }
+      .field-label {
+        font-size: 9px;
+        margin-bottom: 6px;
+      }
+      .field-wrap svg {
+        width: 13px;
+        height: 13px;
+        left: 10px;
+      }
+      .field input {
+        font-size: 11px;
+        padding: 8px 11px 8px 32px;
+        border-radius: 2px;
+      }
+      .access-row {
+        gap: 6px;
+        margin-bottom: 16px;
+      }
+      .access-tile {
+        padding: 6px 4px;
+      }
+      .access-tile-label {
+        font-size: 8px;
+        margin-bottom: 1px;
+      }
+      .access-tile-name {
+        font-size: 10px;
+      }
+      .btn-login {
+        padding: 10px;
+        font-size: 11px;
+        margin-top: 2px;
+        gap: 6px;
+      }
+      .btn-login svg {
+        width: 12px;
+        height: 12px;
+      }
+      .error-msg {
+        margin-top: 12px;
+        padding: 8px 10px;
+        font-size: 10px;
+        gap: 6px;
+      }
+      .error-msg svg {
+        width: 12px;
+        height: 12px;
+      }
+      .form-footer {
+        margin-top: 16px;
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+      .info-tile {
+        padding: 8px 10px;
+      }
+      .info-tile-label {
+        font-size: 8px;
+        margin-bottom: 2px;
+      }
+      .info-tile-val {
+        font-size: 10px;
+      }
+      .footnote {
+        margin-top: 16px;
+        font-size: 9px;
+      }
+      .spinner {
+        width: 28px;
+        height: 28px;
+        border: 2px solid var(--border2);
+      }
+      .loading-text {
+        font-size: 11px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .topbar-brand {
+        font-size: 10px;
+      }
+      .plant-header {
+        padding: 12px 14px;
+      }
+      .plant-icon {
+        width: 32px;
+        height: 32px;
+      }
+      .plant-title {
+        font-size: 12px;
+      }
+      .form-panel {
+        padding: 16px;
+      }
+      .field input {
+        font-size: 10px;
+      }
+      .btn-login {
+        padding: 9px;
+        font-size: 10px;
+      }
+      .form-footer {
+        grid-template-columns: 1fr;
+      }
+      .info-tile-label {
+        font-size: 7px;
+      }
+      .info-tile-val {
+        font-size: 9px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <span class="brand-dot"></span>
+      PSTI · Sistem Kontrol dan Monitoring Listrik
+    </div>
+    <div class="topbar-right">
+      <div class="tb-item"><span>PABRIK</span><span>LINE-A</span></div>
+      <div class="tb-item"><span>NODE</span><span>ESP32 DevKit</span></div>
+      <div class="tb-item"><span>RELAY</span><span>4 Channel</span></div>
+      <div class="tb-item"><span>SENSOR</span><span>PZEM-004T</span></div>
+      <div class="tb-item" id="tb-clock"><span>WAKTU</span><span id="clock-val">--:--:--</span></div>
+    </div>
+  </div>
+
+  <!-- PAGE -->
+  <div class="page">
+    <div class="login-wrap">
+
+      <!-- PLANT HEADER -->
+      <div class="plant-header">
+        <div class="plant-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+            <path d="M12 12v3m0 0h3m-3 0H9"/>
+          </svg>
+        </div>
+        <div>
+          <div class="plant-title">Unit Kontrol Relay</div>
+          <div class="plant-sub">MCB-01 · Akses Terautentikasi Diperlukan</div>
+        </div>
+      </div>
+
+      <div class="divider-bar"></div>
+
+      <!-- FORM PANEL -->
+      <div class="form-panel">
+
+        <div class="form-label-row">Autentikasi Operator</div>
+
+        <!-- USERNAME -->
+        <div class="field">
+          <label class="field-label" for="username">ID Operator</label>
+          <div class="field-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <input type="text" id="username" placeholder="Masukkan operator ID" autocomplete="username" spellcheck="false">
+          </div>
+        </div>
+
+        <!-- PASSWORD -->
+        <div class="field">
+          <label class="field-label" for="password">Kode Akses</label>
+          <div class="field-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input type="password" id="password" placeholder="Masukkan access code" autocomplete="current-password">
+          </div>
+        </div>
+
+        <!-- ACCESS LEVEL (Hidden - Admin Only) -->
+        <input type="hidden" name="level" value="admin">
+
+        <!-- LOGIN BUTTON -->
+        <button class="btn-login" id="loginBtn" onclick="doLogin()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          Autentikasi & Masuk
+        </button>
+
+        <!-- ERROR -->
+        <div class="error-msg hidden" id="errMsg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span id="errText">Operator ID atau Access Code salah.</span>
+        </div>
+
+        <!-- INFO TILES -->
+        <div class="form-footer">
+          <div class="info-tile">
+            <div class="info-tile-label">Status Sistem</div>
+            <div class="info-tile-val"><span class="dot-green"></span>Beroperasi</div>
+          </div>
+          <div class="info-tile">
+            <div class="info-tile-label">Unit Relay</div>
+            <div class="info-tile-val">4-CH · 230VAC</div>
+          </div>
+          <div class="info-tile">
+            <div class="info-tile-label">Firmware</div>
+            <div class="info-tile-val">v2.4.1-stable</div>
+          </div>
+          <div class="info-tile">
+            <div class="info-tile-label">Sesi</div>
+            <div class="info-tile-val" id="session-timeout">Timeout 30m</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="footnote">
+        Akses tidak sah dilarang · PSTI-RCU © 2026
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LOADING OVERLAY -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Mengautentikasi operator…</div>
+  </div>
+
+  <script>
+    /* ──────────────────────────────────────────────
+       CREDENTIALS
+       Ubah di sini atau ganti dengan panggilan API
+       ke endpoint /api/auth di ESP32.
+    ────────────────────────────────────────────── */
+    /* API Backend */
+    const API_BASE = '/api';
+    const DASHBOARD_URL = '/login/relay-control-i40.html';
+
+    /* ── Clock ── */
+    function updateClock() {
+      document.getElementById('clock-val').textContent = new Date().toTimeString().slice(0,8);
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    /* ── Enter key support ── */
+    document.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+    /* ── Clear error on input ── */
+    ['username','password'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => {
+        document.getElementById(id).classList.remove('error');
+        document.getElementById('errMsg').classList.add('hidden');
+      });
+    });
+
+    /* ── API LOGIN ── */
+    async function doLogin() {
+      const uid = document.getElementById('username').value.trim();
+      const pass = document.getElementById('password').value;
+
+      if (!uid || !pass) {
+        showError('Operator ID dan Access Code wajib diisi.');
+        if (!uid) document.getElementById('username').classList.add('error');
+        if (!pass) document.getElementById('password').classList.add('error');
+        return;
+      }
+
+      showLoading('Mengautentikasi via API…');
+
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: uid, password: pass })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Login gagal');
+        }
+
+        // Success: store JWT token & user info
+        sessionStorage.setItem('auth_token', result.token);
+        sessionStorage.setItem('auth_user', result.user.username);
+        sessionStorage.setItem('auth_level', result.user.level);
+        sessionStorage.setItem('auth_login', Date.now());
+
+        document.getElementById('loadingText').textContent = `Selamat datang, ${result.user.username}…`;
+
+        setTimeout(() => {
+          window.location.href = DASHBOARD_URL;
+        }, 1200);
+
+      } catch (error) {
+        hideLoading();
+        showError(error.message);
+        document.getElementById('username').classList.add('error');
+        document.getElementById('password').classList.add('error');
+        
+        const btn = document.getElementById('loginBtn');
+        btn.disabled = true;
+        setTimeout(() => btn.disabled = false, 2000);
+      }
+    }
+
+    function showLoading(msg) {
+      document.getElementById('loadingText').textContent = msg;
+      document.getElementById('loadingOverlay').classList.add('show');
+      document.getElementById('loginBtn').disabled = true;
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('show');
+      document.getElementById('loginBtn').disabled = false;
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errMsg');
+      document.getElementById('errText').textContent = msg;
+      el.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

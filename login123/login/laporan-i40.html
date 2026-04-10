@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSTI — Laporan Energi & Biaya</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0b0e11;
+      --surface:   #111417;
+      --panel:     #161a1f;
+      --border:    #222730;
+      --border2:   #2e3540;
+      --text:      #d0d8e4;
+      --muted:     #5a6476;
+      --green:     #00c97a;
+      --amber:     #f5a623;
+      --red:       #f04d4d;
+      --blue:      #4da6ff;
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(77,166,255,.015) 1px, transparent 1px), linear-gradient(90deg, rgba(77,166,255,.015) 1px, transparent 1px);
+      background-size: 40px 40px; z-index: 0; pointer-events: none;
+    }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
+      font-family: var(--mono); font-size: 11px; position: relative; z-index: 10;
+    }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+    .main { position: relative; z-index: 1; padding: 20px; max-width: 1200px; margin: 0 auto; }
+
+    .section-label { font-family: var(--mono); font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--muted); display:flex; align-items:center; gap:10px; margin-bottom: 12px; }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    .btn-primary { padding: 8px 14px; background: rgba(77,166,255,0.1); border: 1px solid var(--border); border-radius: 3px; color: var(--blue); font-family: var(--mono); font-size: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; text-transform:uppercase; }
+    .btn-primary:hover { border-color: var(--blue); }
+
+    .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 16px; }
+    .day-box { text-align: center; padding: 12px; background: #0d1014; border: 1px solid var(--border); border-radius: 4px; }
+    .day-name { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-bottom: 4px; }
+    .day-value { font-family: var(--mono); font-size: 15px; font-weight: 600; }
+
+    .stat-box { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 12px; text-align: center; }
+    .stat-label { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-bottom: 6px; }
+    .stat-value { font-family: var(--mono); font-size: 16px; font-weight: 600; }
+
+    table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10px; }
+    th { padding: 8px 10px; text-align: left; color: var(--muted); font-weight: 600; background: var(--surface); }
+    td { padding: 8px 10px; border-bottom: 1px solid var(--border2); }
+
+    @media print { .topbar, .btns-nav { display: none !important; } body { background: white; color: black; } }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <span style="font-weight:600;color:var(--text);font-size:12px">PSTI · Reporting Unit</span>
+      <span style="color:var(--border); margin:0 10px">|</span>
+      <span>NODE: <span style="color:var(--text)">ESP32 DevKit</span></span>
+    </div>
+    <div class="topbar-right">
+      <span id="clock" style="font-family:var(--mono); color:var(--text)">00:00:00</span>
+      <span style="background:rgba(0,201,122,.15);border:1px solid rgba(0,201,122,.3);border-radius:2px;color:var(--green);font-family:var(--mono);font-size:10px;font-weight:600;padding:4px 8px; display:flex; align-items:center; gap:4px;">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--green);"></span>Online
+      </span>
+      <button class="btn-primary" onclick="window.location.href='relay-control-i40.html'">← Dasbor</button>
+      <button class="btn-primary" onclick="printWeeklyReport()" style="border-color:var(--green); color:var(--green)">🖨️ Cetak Audit</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="section-label">Report View Selection</div>
+    <div class="btns-nav" style="display:flex; gap:8px; margin-bottom:20px;">
+      <button class="btn-primary" onclick="showReport('weekly')" id="btn-weekly">📊 Mingguan</button>
+      <button class="btn-primary" onclick="showReport('daily')" id="btn-daily">📅 Audit Harian</button>
+    </div>
+
+    <!-- WEEKLY -->
+    <div id="weekly-report">
+      <div class="section-label">Konsumsi Energi & Estimasi Biaya</div>
+      <div style="background:var(--panel); border:1px solid var(--border); border-radius:4px; padding:16px; margin-bottom:20px;">
+        <div class="week-grid" id="weekGrid"></div>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
+          <div class="stat-box"><div class="stat-label">TOTAL LISTRIK</div><div class="stat-value" id="week-total">0.00 kWh</div></div>
+          <div class="stat-box" style="border-color:var(--amber)"><div class="stat-label" style="color:var(--amber)">TOTAL TAGIHAN</div><div class="stat-value" id="week-cost">Rp 0</div></div>
+          <div class="stat-box"><div class="stat-label">RATA-RATA</div><div class="stat-value" id="week-avg">0.00 kWh</div></div>
+          <div class="stat-box"><div class="stat-label">LOG TERREKAM</div><div class="stat-value" id="week-logs">0</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DAILY -->
+    <div id="daily-report" style="display:none;">
+      <div class="section-label">Detail Transaksi Energi Harian</div>
+      <div style="background:var(--panel); border:1px solid var(--border); border-radius:4px; overflow:auto">
+        <table>
+          <thead><tr><th>Waktu</th><th>Tegangan</th><th>Arus</th><th>Daya</th><th>Energi</th><th>Biaya (Est)</th></tr></thead>
+          <tbody id="dataTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+    let energySnapshot = [0,0,0,0,0,0,0], tariff = 1444.7, logsCount = 0;
+
+    async function apiRequest(url) {
+        const token = sessionStorage.getItem('auth_token');
+        const res = await fetch(`${API_BASE}${url}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        return res.json();
+    }
+
+    async function loadData() {
+        try {
+            const token = sessionStorage.getItem('auth_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const tariffRes = await apiRequest('/settings/electricity_tariff');
+            if (tariffRes && tariffRes.error === 'Invalid token') {
+                window.location.href = 'login.html';
+                return;
+            }
+            if (tariffRes && tariffRes.value) tariff = parseFloat(tariffRes.value);
+
+            const data = await apiRequest('/sensors?limit=1000');
+            if (data && data.error === 'Invalid token') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            if (!data || !Array.isArray(data)) return;
+
+            logsCount = data.length;
+            energySnapshot = [0,0,0,0,0,0,0];
+            data.forEach(r => { 
+                const d = new Date(r.timestamp);
+                if (!isNaN(d.getTime())) {
+                    energySnapshot[d.getDay()] = Math.max(energySnapshot[d.getDay()], parseFloat(r.energy) || 0); 
+                }
+            });
+
+            const days = ['MINGGU','SENIN','SELASA','RABU','KAMIS','JUMAT','SABTU'];
+            document.getElementById('weekGrid').innerHTML = energySnapshot.map((v, i) => `
+                <div class="day-box">
+                    <div class="day-name">${days[i]}</div>
+                    <div class="day-value">${v.toFixed(2)} <span style="font-size:8px; color:var(--muted)">kWh</span></div>
+                </div>
+            `).join('');
+
+            const totalKwh = energySnapshot.reduce((a,b)=>a+b,0);
+            document.getElementById('week-total').textContent = totalKwh.toFixed(2) + ' kWh';
+            document.getElementById('week-cost').textContent = 'Rp ' + (totalKwh * tariff).toLocaleString('id-ID');
+            document.getElementById('week-avg').textContent = (totalKwh/7).toFixed(2) + ' kWh';
+            document.getElementById('week-logs').textContent = logsCount;
+
+            document.getElementById('dataTable').innerHTML = data.slice(0, 50).map(r => `
+                <tr>
+                    <td>${new Date(r.timestamp).toLocaleString()}</td>
+                    <td>${(parseFloat(r.voltage) || 0).toFixed(1)}V</td>
+                    <td>${(parseFloat(r.current) || 0).toFixed(2)}A</td>
+                    <td>${Math.round(parseFloat(r.power) || 0)}W</td>
+                    <td>${(parseFloat(r.energy) || 0).toFixed(2)}kWh</td>
+                    <td style="color:var(--amber)">Rp ${( (parseFloat(r.energy)||0) * tariff).toFixed(0)}</td>
+                </tr>
+            `).join('');
+        } catch(e) {
+            console.error('Load report data failed:', e);
+        }
+    }
+
+    function showReport(type) {
+        document.getElementById('weekly-report').style.display = type==='weekly'?'block':'none';
+        document.getElementById('daily-report').style.display = type==='daily'?'block':'none';
+    }
+
+    function printWeeklyReport() {
+      const totalK = energySnapshot.reduce((a,b)=>a+b,0);
+      const win = window.open('', '', 'width=900,height=1000');
+      win.document.write(`
+        <html><head><style>
+          body { font-family: sans-serif; padding: 40px; }
+          .hdr { border-bottom: 2px solid #0066cc; padding-bottom: 10px; margin-bottom: 20px; }
+          .grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 10px; margin: 20px 0; }
+          .box { border: 1px solid #ddd; padding: 10px; text-align: center; }
+          .sum { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f0f7ff; padding: 20px; border: 1px solid #0066cc; }
+          table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+          th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+          th { background: #0066cc; color: white; }
+        </style></head><body>
+          <div class="hdr"><h1>AUDIT ENERGI & BIAYA MINGGUAN</h1><p>PSTI · Sistem Monitoring Mandiri</p></div>
+          <div class="sum">
+            <div><strong>TOTAL KONSUMSI:</strong> ${totalK.toFixed(2)} kWh</div>
+            <div><strong>ESTIMASI TAGIHAN:</strong> Rp ${(totalK*tariff).toLocaleString('id-ID')}</div>
+          </div>
+          <div class="grid">
+            ${['MGU','SEN','SEL','RAB','KAM','JUM','SAB'].map((d,i)=>`<div class="box"><b>${d}</b><br>${energySnapshot[i].toFixed(2)}</div>`).join('')}
+          </div>
+          <table>
+            <tr><th>Metrik</th><th>Nilai</th></tr>
+            <tr><td>Total Titik Data</td><td>${logsCount} Titik</td></tr>
+            <tr><td>Rata-rata Harian</td><td>${(totalK/7).toFixed(2)} kWh</td></tr>
+            <tr><td>Tarif Dasar</td><td>Rp ${tariff} / kWh</td></tr>
+          </table>
+          <p style="text-align:center; font-size:10px; color:#777; margin-top:50px">Laporan Otomatis Sistem PSTI · 2026</p>
+        </body></html>
+      `);
+      win.document.close(); win.print();
+    }
+
+    setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('id-id'); }, 1000);
+    loadData();
+  </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+# Platform.io Project .gitignore
+
+# Platform.io cache
+.pio/
+
+# Compiled object files
+*.o
+*.obj
+*.elf
+
+# Precompiled libraries
+*.lib
+*.a
+
+# IDE directories
+.vscode/
+.idea/
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# Build artifacts
+build/
+bin/
+lib/
+
+# Python
+*.py[cod]
+__pycache__/
+*.so
+.Python
+
+# Environment
+.env
+.env.local
+venv/
+env/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
+
+# CMake
+CMakeLists.txt.user
+cmake_install.cmake
+
+# Output files
+*.hex
+*.bin
+*.elf

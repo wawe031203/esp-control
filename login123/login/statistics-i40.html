@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PSTI — Statistik Energi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0b0e11;
+      --surface:   #111417;
+      --panel:     #161a1f;
+      --border:    #222730;
+      --border2:   #2e3540;
+      --text:      #d0d8e4;
+      --muted:     #5a6476;
+      --green:     #00c97a;
+      --amber:     #f5a623;
+      --red:       #f04d4d;
+      --blue:      #4da6ff;
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 11px;
+      gap: 12px;
+    }
+
+    .topbar-left, .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tb-sep { color: var(--border); }
+
+    /* ── MAIN ── */
+    .main {
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+
+    /* ── BUTTON ── */
+    .btn-primary {
+      padding: 8px 14px;
+      background: rgba(77,166,255,.12);
+      border: 1px solid rgba(77,166,255,.25);
+      border-radius: 3px;
+      color: var(--blue);
+      font-family: var(--mono);
+      font-size: 10px; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase;
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+    }
+    .btn-primary:hover {
+      background: rgba(77,166,255,.22);
+      border-color: var(--blue);
+    }
+
+    /* ── CONTROL BAR ── */
+    .control-bar {
+      display: flex; gap: 8px; align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* ── STATS GRID ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      letter-spacing: .08em;
+    }
+
+    .stat-value {
+      font-family: var(--mono);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    /* ── SETTINGS ── */
+    .settings-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .settings-box label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 6px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .settings-box input, .settings-box select {
+      width: 100%;
+      padding: 8px;
+      background: #0d1014;
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: var(--mono);
+      border-radius: 2px;
+      margin-bottom: 12px;
+    }
+
+    .settings-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .settings-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      .main { padding: 12px; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .topbar { flex-direction: column; align-items: flex-start; gap: 8px; }
+      .topbar-right { width: 100%; justify-content: space-between; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span style="font-weight:600;color:var(--text);font-size:12px;letter-spacing:.06em">PSTI · Statistik Energi</span>
+      <span class="tb-sep">|</span>
+      <span><span style="color:var(--muted);">NODE </span><span style="color:var(--text);font-weight:500;">ESP32 DevKit</span></span>
+      <span style="color:var(--border);">|</span>
+      <span><span style="color:var(--muted);">RELAY </span><span style="color:var(--text);font-weight:500;">4 Channel</span></span>
+      <span style="color:var(--border);">|</span>
+      <span><span style="color:var(--muted);">SENSOR </span><span style="color:var(--text);font-weight:500;">PZEM-004T</span></span>
+    </div>
+    <div class="topbar-right">
+      <span id="clock" style="color:var(--text);font-weight:500;"></span>
+      <span style="background:rgba(0,201,122,.15);border:1px solid rgba(0,201,122,.3);border-radius:2px;color:var(--green);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;padding:4px 8px; display:flex; align-items:center; gap:4px;">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--green);"></span>Online
+      </span>
+      <button onclick="window.location.href='relay-control-i40.html'" style="background:rgba(77,166,255,.1);border:1px solid rgba(77,166,255,.25);border-radius:2px;color:var(--blue);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;cursor:pointer;">← Dasbor</button>
+      <button onclick="window.location.href='statistics-i40.html'" style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3);border-radius:2px;color:var(--amber);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;cursor:pointer;">📈 Statistik</button>
+      <button onclick="window.location.href='laporan-i40.html'" style="background:rgba(0,201,122,.1);border:1px solid rgba(0,201,122,.25);border-radius:2px;color:var(--green);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;cursor:pointer;">📋 Laporan</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+
+    <!-- STATISTICS -->
+    <div class="section-label">Statistik Harian</div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Tegangan Min</div>
+        <div class="stat-value" id="stat-vol-min">— V</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tegangan Max</div>
+        <div class="stat-value" id="stat-vol-max">— V</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tegangan Rata-rata</div>
+        <div class="stat-value" id="stat-vol-avg">— V</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Frekuensi</div>
+        <div class="stat-value" id="stat-freq">50.0<span style="font-size:11px;">Hz</span></div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Arus Min</div>
+        <div class="stat-value" id="stat-cur-min">— A</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Arus Max</div>
+        <div class="stat-value" id="stat-cur-max">— A</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Arus Rata-rata</div>
+        <div class="stat-value" id="stat-cur-avg">— A</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Faktor Daya</div>
+        <div class="stat-value" id="stat-pf">0.95<span style="font-size:11px;">PF</span></div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Daya Min</div>
+        <div class="stat-value" id="stat-pow-min">— W</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Daya Max</div>
+        <div class="stat-value" id="stat-pow-max">— W</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Daya Rata-rata</div>
+        <div class="stat-value" id="stat-pow-avg">— W</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Energi</div>
+        <div class="stat-value" id="stat-total-energy">— kWh</div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="section-label" style="margin-top: 30px;">Pengaturan Recording</div>
+    <div class="settings-box">
+      <div class="settings-row">
+        <div>
+          <label>Interval Rekaman</label>
+          <select id="recordInterval">
+            <option value="30">Setiap 30 detik</option>
+            <option value="60" selected>Setiap 1 menit</option>
+            <option value="300">Setiap 5 menit</option>
+            <option value="600">Setiap 10 menit</option>
+          </select>
+        </div>
+        <div>
+          <label>Aktifkan Perekaman?</label>
+          <label style="display:flex; gap:8px; align-items:center; cursor:pointer; margin-top:6px;">
+            <input type="checkbox" id="recordingEnabled" checked style="width:16px; height:16px; cursor:pointer;">
+            <span style="font-family:var(--mono); color:var(--text); font-size:11px;">Aktif</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="control-bar">
+      <button class="btn-primary" onclick="loadStats()" style="background:rgba(77,166,255,0.1)">🔄 Refresh Audit</button>
+      <button class="btn-primary" onclick="exportHistoryCSV()" style="background:rgba(0,201,122,.1);border:1px solid rgba(0,201,122,.25);color:var(--green);">📥 Ekspor CSV</button>
+      <button class="btn-primary" onclick="window.location.href='laporan-i40.html'" style="background:rgba(77,166,255,.1);border:1px solid rgba(77,166,255,.25);color:var(--blue);">📈 Laporan Lengkap</button>
+    </div>
+
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+
+    async function apiRequest(url) {
+        const token = sessionStorage.getItem('auth_token');
+        const res = await fetch(`${API_BASE}${url}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        return res.json();
+    }
+
+    async function loadStats() {
+        try {
+            const token = sessionStorage.getItem('auth_token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const data = await apiRequest('/sensors?limit=1000');
+            if (data && data.error === 'Invalid token') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            if (!data || !Array.isArray(data) || !data.length) return;
+
+            const vs = data.map(r => parseFloat(r.voltage)).filter(v => !isNaN(v));
+            const is = data.map(r => parseFloat(r.current)).filter(v => !isNaN(v));
+            const ps = data.map(r => parseFloat(r.power)).filter(v => !isNaN(v));
+            const es = data.map(r => parseFloat(r.energy)).filter(v => !isNaN(v));
+            
+            if (!vs.length) return;
+
+            const avg = arr => (arr.reduce((a,b)=>a+b,0)/arr.length);
+
+            document.getElementById('stat-vol-min').textContent = Math.min(...vs).toFixed(1) + ' V';
+            document.getElementById('stat-vol-max').textContent = Math.max(...vs).toFixed(1) + ' V';
+            document.getElementById('stat-vol-avg').textContent = avg(vs).toFixed(1) + ' V';
+
+            document.getElementById('stat-cur-min').textContent = Math.min(...is).toFixed(2) + ' A';
+            document.getElementById('stat-cur-max').textContent = Math.max(...is).toFixed(2) + ' A';
+            document.getElementById('stat-cur-avg').textContent = avg(is).toFixed(2) + ' A';
+
+            document.getElementById('stat-pow-min').textContent = Math.min(...ps).toFixed(0) + ' W';
+            document.getElementById('stat-pow-max').textContent = Math.max(...ps).toFixed(0) + ' W';
+            document.getElementById('stat-pow-avg').textContent = avg(ps).toFixed(0) + ' W';
+            document.getElementById('stat-total-energy').textContent = Math.max(...es).toFixed(2) + ' kWh';
+            
+            const first = data[0];
+            document.getElementById('stat-freq').textContent = (parseFloat(first.frequency) || 50.0).toFixed(1) + 'Hz';
+            document.getElementById('stat-pf').textContent = (parseFloat(first.pf) || 0.00).toFixed(2) + 'PF';
+
+        } catch(e) { 
+            console.error('Stats load failed:', e); 
+        }
+    }
+
+    function exportHistoryCSV() {
+        window.location.href = 'laporan-i40.html'; 
+    }
+
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toLocaleTimeString('id-ID');
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+    loadStats();
+  </script>
+
+</body>
+</html>
