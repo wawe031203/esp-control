@@ -70,10 +70,30 @@ async function initDB() {
       last_changed DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )
   `);
+
+  await connection.execute(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key_name VARCHAR(100) PRIMARY KEY,
+      value VARCHAR(255)
+    )
+  `);
+
+  await connection.execute(`
+    CREATE TABLE IF NOT EXISTS schedules (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      relay_id TINYINT,
+      on_time TIME,
+      off_time TIME,
+      is_active TINYINT DEFAULT 1
+    )
+  `);
   
   // Default user
   const hash = bcrypt.hashSync('admin123', 10);
   await connection.execute('INSERT IGNORE INTO users VALUES (1, "admin", ?, "admin")', [hash]);
+
+  // Default settings
+  await connection.execute('INSERT IGNORE INTO settings (key_name, value) VALUES ("electricity_tariff", "1444.7")');
   
   // Init relays
   for (let i = 1; i <= 4; i++) {

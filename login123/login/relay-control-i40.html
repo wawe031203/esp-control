@@ -46,12 +46,15 @@
     .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
 
     /* ── METRICS ── */
-    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
     .metric-card { background: var(--panel); border: 1px solid var(--border); padding: 14px 16px; border-radius: 4px; position:relative; overflow:hidden; }
     .metric-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: var(--blue); }
     .metric-label { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 8px; text-transform:uppercase; }
-    .metric-value { font-family: var(--mono); font-size: 20px; font-weight: 600; }
+    .metric-value { font-family: var(--mono); font-size: 18px; font-weight: 600; }
     .metric-value span { font-size: 11px; color: var(--muted); margin-left:4px; }
+
+    @media (max-width: 1100px) { .metrics-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 600px) { .metrics-grid { grid-template-columns: repeat(2, 1fr); } }
 
     /* ── RELAYS ── */
     .relay-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
@@ -102,12 +105,21 @@
   </div>
 
   <main class="main">
-    <div class="section-label">Performance & Costs</div>
+    <div class="section-label">Performance & System Status</div>
     <div class="metrics-grid">
       <div class="metric-card"><div class="metric-label">Power Load</div><div class="metric-value" id="k-p">0<span>W</span></div></div>
+      <div class="metric-card"><div class="metric-label">Current</div><div class="metric-value" id="k-i">0.00<span>A</span></div></div>
+      <div class="metric-card"><div class="metric-label">Energy Usage</div><div class="metric-value" id="k-e" style="color:var(--blue)">0.00<span>kWh</span></div></div>
       <div class="metric-card" style="border-color:var(--amber)"><div class="metric-label">Billing Estimate</div><div class="metric-value" id="k-c" style="color:var(--amber)">Rp 0</div></div>
-      <div class="metric-card"><div class="metric-label">Relay Status</div><div class="metric-value" id="k-r">0<span>/ 4</span></div></div>
-      <div class="metric-card"><div class="metric-label">System Uptime</div><div class="metric-value" id="k-u">00:00:00</div></div>
+      <div class="metric-card"><div class="metric-label">Relay Stats</div><div class="metric-value" id="k-r">0<span>/ 4 ON</span></div></div>
+      <div class="metric-card">
+        <div class="metric-label">System Performance</div>
+        <div class="metric-value" id="k-u">00:00:00</div>
+        <div id="u-detail" style="font-size:8px; color:var(--muted); font-family:var(--mono); margin-top:4px; line-height:1.4">
+          PWR: 0W | CUR: 0A<br>
+          NRG: 0kWh | RLY: 0/4
+        </div>
+      </div>
     </div>
 
     <div class="section-label">Smart Scheduler (Automation)</div>
@@ -185,46 +197,15 @@
     async function sync() {
         try {
             const token = sessionStorage.getItem('auth_token');
-            if (!token) {
-                console.warn('No token found, redirecting to login...');
-                window.location.href = 'login.html';
-                return;
-            }
+            if (!token) return window.location.href = 'login.html';
 
-            // Sync Sensors
-            try {
-                const data = await api('GET', '/sensors/latest');
-                if (data && !data.error) {
-                    const pVal = parseFloat(data.power) || 0;
-                    const eVal = parseFloat(data.energy) || 0;
-                    
-                    document.getElementById('k-p').innerHTML = Math.round(pVal) + '<span>W</span>';
-                    const cost = (eVal * tariff).toLocaleString('id-ID');
-                    document.getElementById('k-c').textContent = `Rp ${cost}`;
-                    
-                    if (chart) {
-                        chart.data.labels.push(""); 
-                        chart.data.datasets[0].data.push(pVal);
-                        if(chart.data.labels.length > 20) { 
-                            chart.data.labels.shift(); 
-                            chart.data.datasets[0].data.shift(); 
-                        }
-                        chart.update('none');
-                    }
-                } else if (data && data.error === 'Invalid token') {
-                    window.location.href = 'login.html';
-                }
-            } catch (e) {
-                console.error('Sensors sync error:', e);
-            }
-
-            // Sync Relays
+            let activeRelays = 0;
+            // Sync Relays First (to get active count)
             try {
                 const relays = await api('GET', '/relays');
                 if (relays && Array.isArray(relays)) {
-                    let active = 0;
                     document.getElementById('relayGrid').innerHTML = relays.map(r => {
-                        if(r.state) active++;
+                        if(r.state) activeRelays++;
                         return `
                         <div class="relay-card ${r.state ? 'active' : ''}">
                             <div class="relay-card-top">
@@ -240,15 +221,46 @@
                             </div>
                         </div>`;
                     }).join('');
-                    document.getElementById('k-r').innerHTML = active + '<span>/ 4</span>';
+                    document.getElementById('k-r').innerHTML = activeRelays + '<span>/ 4 ON</span>';
                 }
-            } catch (e) {
-                console.error('Relays sync error:', e);
-            }
+            } catch (e) { console.error('Relays sync error:', e); }
 
-        } catch(e) {
-            console.error('General sync error:', e);
-        }
+            // Sync Sensors
+            try {
+                const data = await api('GET', '/sensors/latest');
+                if (data && !data.error) {
+                    const pVal = parseFloat(data.power) || 0;
+                    const iVal = parseFloat(data.current) || 0;
+                    const eVal = parseFloat(data.energy) || 0;
+                    
+                    document.getElementById('k-p').innerHTML = Math.round(pVal) + '<span>W</span>';
+                    document.getElementById('k-i').innerHTML = iVal.toFixed(2) + '<span>A</span>';
+                    document.getElementById('k-e').innerHTML = eVal.toFixed(2) + '<span>kWh</span>';
+
+                    const costVal = (eVal * tariff);
+                    const costFormatted = costVal.toLocaleString('id-ID');
+                    document.getElementById('k-c').textContent = `Rp ${costFormatted}`;
+                    
+                    document.getElementById('u-detail').innerHTML = `
+                        PWR: ${Math.round(pVal)}W | CUR: ${iVal.toFixed(2)}A | RLY: ${activeRelays}/4<br>
+                        NRG: ${eVal.toFixed(3)}kWh | COST: Rp ${costFormatted}
+                    `;
+                    
+                    if (chart) {
+                        chart.data.labels.push(""); 
+                        chart.data.datasets[0].data.push(pVal);
+                        if(chart.data.labels.length > 20) { 
+                            chart.data.labels.shift(); 
+                            chart.data.datasets[0].data.shift(); 
+                        }
+                        chart.update('none');
+                    }
+                } else if (data && data.error === 'Invalid token') {
+                    window.location.href = 'login.html';
+                }
+            } catch (e) { console.error('Sensors sync error:', e); }
+
+        } catch(e) { console.error('General sync error:', e); }
     }
 
     function initChart() {

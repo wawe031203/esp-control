@@ -55,3 +55,7 @@ cmake_install.cmake
 *.hex
 *.bin
 *.elf
+
+# Web / Node.js
+node_modules/
+*.db
