@@ -14,10 +14,12 @@
 #define ESP_GATEWAY   10, 10, 40, 1
 #define ESP_SUBNET    255, 255, 255, 0
 
-// --- Server Node.js (IP Laptop/PC Anda) ---
-#define SERVER_HOST   "10.10.40.248"
-#define SERVER_PORT   3000
-#define SERVER_BASE   "http://" SERVER_HOST ":" STRINGIFY(SERVER_PORT)
+// --- Server Node.js (VPS Cloud Domain) ---
+#define SERVER_HOST   "skml.buildsys.site"
+#define SERVER_PORT   80
+#define SERVER_BASE   "http://" SERVER_HOST 
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
 
 // Kredensial login ESP32 ke server
 #define ESP_USERNAME  "admin"
@@ -54,9 +56,6 @@
 
 // --- Timing ---
 #define SENSOR_INTERVAL_MS   5000   // Kirim data sensor tiap 5 detik
-#define RELAY_POLL_MS        2000   // Backup polling tiap 2 detik
+#define RELAY_POLL_MS        1000   // Dipercepat ke 1 detik untuk VPS
 #define WIFI_RECONNECT_MS   10000   // Cek WiFi tiap 10 detik
 
-// Helper macro
-#define STRINGIFY2(x) #x
-#define STRINGIFY(x)  STRINGIFY2(x)

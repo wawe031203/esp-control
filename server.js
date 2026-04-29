@@ -22,15 +22,10 @@ let lastRecordTimes = [0, 0, 0];
 const ESP32_IP = (process.env.ESP32_IP || '10.10.40.200').split(/[\s#]/)[0].trim();
 
 async function pushRelayToESP32(id, state) {
-    try {
-        await axios.post(`http://${ESP32_IP}/relay/${id}`, { state: state ? 1 : 0 }, { timeout: 7000 });
-        console.log(`📡 Push ESP32 Relay ${id}: ${state ? 'ON' : 'OFF'} OK`);
-        return { success: true };
-    } catch (e) {
-        console.warn(`⚠  Push ESP32 Relay ${id} FAILED:`, e.message);
-        if (e.response) console.warn('Response data:', e.response.data);
-        return { success: false, error: e.message };
-    }
+    // Dinonaktifkan karena Server VPS tidak bisa menembak IP Lokal di balik router/NAT.
+    // ESP32 akan mengambil status relay menggunakan fitur "Polling" setiap 1 detik.
+    console.log(`☁️ Cloud Mode: Relay ${id} set to ${state ? 'ON' : 'OFF'} (Waiting for ESP32 Poll)`);
+    return { success: true }; 
 }
 
 
