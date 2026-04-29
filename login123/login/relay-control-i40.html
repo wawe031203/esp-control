@@ -20,71 +20,152 @@
       --amber:     #f5a623;
       --red:       #f04d4d;
       --blue:      #4da6ff;
+      --grid-line: rgba(77,166,255,.015);
+      --item-bg:   rgba(0,0,0,0.2);
+      --toggle-bg: #1e252e;
+      --input-bg:  #0d1014;
       --mono: 'IBM Plex Mono', monospace;
       --sans: 'IBM Plex Sans', sans-serif;
     }
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --sidebar: #ffffff;
+            --card: #ffffff;
+            --panel: #ffffff;
+            --border: #e2e8f0;
+            --border2: #cbd5e1;
+            --text-main: #0f172a;
+            --text: #0f172a;
+            --text-dim: #64748b;
+            --muted: #64748b;
+            --accent: #2563eb;
+            --amber: #d97706;
+            --green: #059669;
+            --red: #dc2626;
+            --blue: #2563eb;
+            --grid-line: rgba(37,99,235,.03);
+            --item-bg: #f1f5f9;
+            --toggle-bg: #f1f5f9;
+            --input-bg: #ffffff;
+        }
+    
 
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
     body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; }
     body::before {
       content: ''; position: fixed; inset: 0;
-      background-image: linear-gradient(rgba(77,166,255,.015) 1px, transparent 1px), linear-gradient(90deg, rgba(77,166,255,.015) 1px, transparent 1px);
+      background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
       background-size: 40px 40px; z-index: 0; pointer-events: none;
     }
 
     .topbar {
       display: flex; align-items: center; justify-content: space-between;
       padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
-      font-family: var(--mono); font-size: 11px; position: relative; z-index: 10;
+      font-family: var(--mono); font-size: 12px; position: relative; z-index: 10;
     }
     .topbar-left, .topbar-right { display: flex; align-items: center; gap: 12px; }
 
     .main { position: relative; z-index: 1; padding: 20px; display: flex; flex-direction: column; gap: 20px; max-width: 1000px; margin: 0 auto; width: 100%; }
 
-    .section-label { font-family: var(--mono); font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--muted); display:flex; align-items:center; gap:10px; margin-bottom: 12px; }
+    .section-label { font-family: var(--mono); font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--muted); display:flex; align-items:center; gap:10px; margin-bottom: 12px; }
     .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
 
-    /* ── METRICS ── */
-    .metrics-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
-    .metric-card { background: var(--panel); border: 1px solid var(--border); padding: 14px 16px; border-radius: 4px; position:relative; overflow:hidden; }
-    .metric-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: var(--blue); }
-    .metric-label { font-family: var(--mono); font-size: 10px; color: var(--muted); margin-bottom: 8px; text-transform:uppercase; }
-    .metric-value { font-family: var(--mono); font-size: 18px; font-weight: 600; }
-    .metric-value span { font-size: 11px; color: var(--muted); margin-left:4px; }
+    /* ── SENSOR PANELS ── */
+    .sensor-dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .sensor-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 16px;
+      position: relative;
+    }
+    
+    .sensor-panel::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--blue);
+    }
+    .sensor-panel.s2::before { background: var(--amber); }
+    .sensor-panel.s3::before { background: var(--green); }
 
-    @media (max-width: 1100px) { .metrics-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 600px) { .metrics-grid { grid-template-columns: repeat(2, 1fr); } }
+    .sensor-title {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .mini-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .m-item {
+      background: var(--item-bg);
+      padding: 10px;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+
+    .m-label { font-size: 13px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; font-weight: 500; }
+    .m-value { font-family: var(--mono); font-size: 16px; font-weight: 600; }
+    .m-value span { font-size: 13px; color: var(--muted); }
+
+    @media (max-width: 900px) {
+      .sensor-dashboard-grid { grid-template-columns: 1fr; }
+    }
 
     /* ── RELAYS ── */
-    .relay-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .relay-card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+    .relay-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .relay-card { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
     .relay-card.active { border-color: rgba(0,201,122,0.3); background: rgba(0,201,122,0.02); }
     .relay-card-top { display: flex; justify-content: space-between; align-items: center; }
     
-    .toggle-wrap { position:relative; height:32px; display:flex; }
+    .toggle-wrap { position:relative; height:24px; display:flex; }
     .toggle-wrap input { opacity:0; position:absolute; inset:0; cursor:pointer; z-index:2; }
-    .toggle-btn { display:flex; align-items:center; padding:0 12px; font-family:var(--mono); font-size:11px; font-weight:600; border: 1px solid var(--border2); background: #1e252e; color: var(--muted); }
+    .toggle-btn { display:flex; align-items:center; padding:0 8px; font-family:var(--mono); font-size: 12px; font-weight:600; border: 1px solid var(--border2); background: var(--toggle-bg); color: var(--muted); }
     input:checked ~ .toggle-btn.on { background: rgba(0,201,122,.2); color: var(--green); border-color: var(--green); }
-    input:not(:checked) ~ .toggle-btn.off { background: rgba(0,201,122,.2); color: var(--green); border-color: var(--green); }
+    input:not(:checked) ~ .toggle-btn.off { background: rgba(77,166,255,.1); color: var(--blue); border-color: var(--blue); }
 
     /* ── AUTOMATION PANEL ── */
     .auto-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 16px; display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
     .auto-form { display: flex; flex-direction: column; gap: 10px; border-right: 1px solid var(--border); padding-right: 20px; }
     .auto-list { max-height: 200px; overflow-y: auto; }
-    input[type="time"], select { background: #0d1014; border: 1px solid var(--border); color: var(--text); font-family: var(--mono); padding: 5px; border-radius: 3px; }
+    input[type="time"], select { background: var(--input-bg); border: 1px solid var(--border); color: var(--text); font-family: var(--mono); padding: 5px; border-radius: 3px; }
 
-    .btn-primary { padding: 8px 12px; background: rgba(77,166,255,0.1); border: 1px solid var(--border); color: var(--blue); font-family: var(--mono); font-size: 10px; font-weight:600; cursor:pointer; text-transform:uppercase; border-radius:3px; }
+    .btn-primary { padding: 8px 12px; background: rgba(77,166,255,0.1); border: 1px solid var(--border); color: var(--blue); font-family: var(--mono); font-size: 12px; font-weight:600; cursor:pointer; text-transform:uppercase; border-radius:3px; }
     .btn-primary:hover { border-color: var(--blue); }
 
     .chart-container { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 16px; height: 260px; }
     
-    table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10px; }
+    table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
     th { color: var(--muted); text-align: left; padding: 5px; background: var(--surface); }
     td { padding: 5px; border-bottom: 1px solid var(--border2); }
 
-    @media (max-width: 768px) { .metrics-grid, .relay-grid, .auto-panel { grid-template-columns: 1fr; } .auto-form { border-right:none; border-bottom:1px solid var(--border); padding-bottom:20px; } }
+    .sys-info-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 5px;
+    }
+
+    @media (max-width: 768px) { 
+      .relay-grid, .auto-panel, .sys-info-grid { grid-template-columns: 1fr; } 
+      .auto-form { border-right:none; border-bottom:1px solid var(--border); padding-bottom:20px; } 
+    }
   </style>
+
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
 </head>
 <body>
 
@@ -95,53 +176,88 @@
       <span>NODE: <span style="color:var(--text)">ESP32 DevKit</span></span>
     </div>
     <div class="topbar-right">
+            <button onclick="toggleTheme()" id="theme-toggle" style="background:transparent; border:1px solid var(--border); border-radius:2px; color:var(--text); font-family:var(--mono); font-size:12px; font-weight:600; padding:4px 10px; cursor:pointer;">🌞 Mode Terang</button>
       <span id="clock" style="color:var(--text);font-weight:500;"></span>
-      <span style="background:rgba(0,201,122,.15);border:1px solid rgba(0,201,122,.3);border-radius:2px;color:var(--green);font-family:var(--mono);font-size:10px;font-weight:600;padding:4px 8px; display:flex; align-items:center; gap:4px;">
+      <span style="background:rgba(0,201,122,.15);border:1px solid rgba(0,201,122,.3);border-radius:2px;color:var(--green);font-family:var(--mono);font-size: 12px;font-weight:600;padding:4px 8px; display:flex; align-items:center; gap:4px;">
         <span style="width:6px;height:6px;border-radius:50%;background:var(--green);"></span>Online
       </span>
       <button onclick="window.location.href='statistics-i40.html'" class="btn-primary" style="color:var(--amber)">📈 Statistik</button>
       <button onclick="window.location.href='laporan-i40.html'" class="btn-primary" style="color:var(--green)">📋 Laporan</button>
-    </div>
+    
+        </div>
   </div>
 
   <main class="main">
-    <div class="section-label">Performance & System Status</div>
-    <div class="metrics-grid">
-      <div class="metric-card"><div class="metric-label">Power Load</div><div class="metric-value" id="k-p">0<span>W</span></div></div>
-      <div class="metric-card"><div class="metric-label">Current</div><div class="metric-value" id="k-i">0.00<span>A</span></div></div>
-      <div class="metric-card"><div class="metric-label">Energy Usage</div><div class="metric-value" id="k-e" style="color:var(--blue)">0.00<span>kWh</span></div></div>
-      <div class="metric-card" style="border-color:var(--amber)"><div class="metric-label">Billing Estimate</div><div class="metric-value" id="k-c" style="color:var(--amber)">Rp 0</div></div>
-      <div class="metric-card"><div class="metric-label">Relay Stats</div><div class="metric-value" id="k-r">0<span>/ 4 ON</span></div></div>
-      <div class="metric-card">
-        <div class="metric-label">System Performance</div>
-        <div class="metric-value" id="k-u">00:00:00</div>
-        <div id="u-detail" style="font-size:8px; color:var(--muted); font-family:var(--mono); margin-top:4px; line-height:1.4">
-          PWR: 0W | CUR: 0A<br>
-          NRG: 0kWh | RLY: 0/4
+    <!-- SYSTEM INFO SUMMARY -->
+    <div class="sys-info-grid">
+        <div class="m-item" style="border-color: var(--blue); background: rgba(77,166,255,0.05);">
+            <div class="m-label" style="color:var(--blue)">Total Daya Sistem</div>
+            <div class="m-value" id="total-p-all">0<span>W</span></div>
+        </div>
+        <div class="m-item" style="border-color: var(--green); background: rgba(0,201,122,0.05);">
+            <div class="m-label" style="color:var(--green)">Saklar Menyala</div>
+            <div class="m-value" id="k-r">0<span>/ 4 ON</span></div>
+        </div>
+        <div class="m-item" style="border-color: var(--amber); background: rgba(245,166,35,0.05);">
+            <div class="m-label" style="color:var(--amber)">Waktu Aktif Sistem</div>
+            <div class="m-value" id="k-u">00:00:00</div>
+        </div>
+    </div>
+
+    <div class="section-label">Pantau Listrik Tiap Sensor</div>
+    <div class="sensor-dashboard-grid">
+      <!-- SENSOR 1 -->
+      <div class="sensor-panel s1">
+        <div class="sensor-title"><span>SENSOR 01</span> <span style="color:var(--blue)">AKTIF</span></div>
+        <div class="mini-metrics">
+          <div class="m-item"><div class="m-label">Daya (Watt)</div><div class="m-value" id="s1-p">0<span>W</span></div></div>
+          <div class="m-item"><div class="m-label">Tegangan</div><div class="m-value" id="s1-v">0<span>V</span></div></div>
+          <div class="m-item"><div class="m-label">Arus</div><div class="m-value" id="s1-i">0.0<span>A</span></div></div>
+          <div class="m-item"><div class="m-label">Total Listrik</div><div class="m-value" id="s1-e">0.0<span>kWh</span></div></div>
+        </div>
+      </div>
+      <!-- SENSOR 2 -->
+      <div class="sensor-panel s2">
+        <div class="sensor-title"><span>SENSOR 02</span> <span style="color:var(--amber)">AKTIF</span></div>
+        <div class="mini-metrics">
+          <div class="m-item"><div class="m-label">Daya (Watt)</div><div class="m-value" id="s2-p">0<span>W</span></div></div>
+          <div class="m-item"><div class="m-label">Tegangan</div><div class="m-value" id="s2-v">0<span>V</span></div></div>
+          <div class="m-item"><div class="m-label">Arus</div><div class="m-value" id="s2-i">0.0<span>A</span></div></div>
+          <div class="m-item"><div class="m-label">Total Listrik</div><div class="m-value" id="s2-e">0.0<span>kWh</span></div></div>
+        </div>
+      </div>
+      <!-- SENSOR 3 -->
+      <div class="sensor-panel s3">
+        <div class="sensor-title"><span>SENSOR 03</span> <span style="color:var(--green)">AKTIF</span></div>
+        <div class="mini-metrics">
+          <div class="m-item"><div class="m-label">Daya (Watt)</div><div class="m-value" id="s3-p">0<span>W</span></div></div>
+          <div class="m-item"><div class="m-label">Tegangan</div><div class="m-value" id="s3-v">0<span>V</span></div></div>
+          <div class="m-item"><div class="m-label">Arus</div><div class="m-value" id="s3-i">0.0<span>A</span></div></div>
+          <div class="m-item"><div class="m-label">Total Listrik</div><div class="m-value" id="s3-e">0.0<span>kWh</span></div></div>
         </div>
       </div>
     </div>
 
-    <div class="section-label">Smart Scheduler (Automation)</div>
+    <div class="section-label">Pengatur Waktu (Timer Otomatis)</div>
     <div class="auto-panel">
       <div class="auto-form">
-        <label style="font-size:9px; color:var(--muted)">ADD NEW SCHEDULE</label>
-        <select id="scRelay"><option value="1">Relay 01</option><option value="2">Relay 02</option><option value="3">Relay 03</option><option value="4">Relay 04</option></select>
+        <label style="font-size: 12px; color:var(--muted)">TAMBAH JADWAL BARU</label>
+        <select id="scRelay"><option value="1">Saklar 01</option><option value="2">Saklar 02</option><option value="3">Saklar 03</option><option value="4">Saklar 04</option></select>
         <div style="display:flex; gap:10px">
-          <div style="flex:1"><label style="font-size:8px; color:var(--muted)">ON TIME</label><input type="time" id="scOn" style="width:100%"></div>
-          <div style="flex:1"><label style="font-size:8px; color:var(--muted)">OFF TIME</label><input type="time" id="scOff" style="width:100%"></div>
+          <div style="flex:1"><label style="font-size: 12px; color:var(--muted)">JAM NYALA</label><input type="time" id="scOn" style="width:100%"></div>
+          <div style="flex:1"><label style="font-size: 12px; color:var(--muted)">JAM MATI</label><input type="time" id="scOff" style="width:100%"></div>
         </div>
-        <button class="btn-primary" onclick="addSchedule()">Save Schedule</button>
+        <button class="btn-primary" onclick="addSchedule()">Simpan Jadwal</button>
       </div>
       <div class="auto-list">
-        <table><thead><tr><th>RELAY</th><th>ON</th><th>OFF</th><th>ACTION</th></tr></thead><tbody id="scTable"></tbody></table>
+        <table><thead><tr><th>SAKLAR</th><th>NYALA</th><th>MATI</th><th>HAPUS</th></tr></thead><tbody id="scTable"></tbody></table>
       </div>
     </div>
 
-    <div class="section-label">Relay Controller</div>
+    <div class="section-label">Kontrol Saklar / Relay</div>
     <div class="relay-grid" id="relayGrid"></div>
 
-    <div class="section-label">Live Power Trend</div>
+    <div class="section-label">Grafik Daya Gabungan (Total Watt)</div>
     <div class="chart-container"><canvas id="pChart"></canvas></div>
   </main>
 
@@ -200,27 +316,41 @@
             if (!token) return window.location.href = 'login.html';
 
             let activeRelays = 0;
-            // Sync Relays First (to get active count)
+            // Sync Relays (selective DOM update, no full re-render)
             try {
                 const relays = await api('GET', '/relays');
                 if (relays && Array.isArray(relays)) {
-                    document.getElementById('relayGrid').innerHTML = relays.map(r => {
-                        if(r.state) activeRelays++;
-                        return `
-                        <div class="relay-card ${r.state ? 'active' : ''}">
+                    const grid = document.getElementById('relayGrid');
+                    // Build grid once on first load
+                    if (!grid.dataset.initialized) {
+                        grid.innerHTML = relays.map(r => `
+                        <div class="relay-card" id="relay-card-${r.id}">
                             <div class="relay-card-top">
-                                <div style="font-weight:600">Output 0${r.id}</div>
+                                <div style="font-weight:600">Saklar 0${r.id}</div>
                                 <div class="toggle-wrap">
-                                    <input type="checkbox" ${r.state ? 'checked' : ''} onchange="toggleRelay(${r.id}, this.checked)">
+                                    <input type="checkbox" id="relay-chk-${r.id}" onchange="toggleRelay(${r.id}, this.checked)">
                                     <span class="toggle-btn off" style="border-radius:4px 0 0 4px; border-right:none">OFF</span>
                                     <span class="toggle-btn on" style="border-radius:0 4px 4px 0">ON</span>
                                 </div>
                             </div>
-                            <div style="font-size:10px; color:var(--muted); margin-top:10px">
-                                Status: ${r.state ? '<span style="color:var(--green)">ACTIVE</span>' : 'IDLE'}
+                            <div style="font-size: 12px; color:var(--muted); margin-top:10px" id="relay-status-${r.id}">
+                                Status: MATI
                             </div>
-                        </div>`;
-                    }).join('');
+                        </div>`).join('');
+                        grid.dataset.initialized = 'true';
+                    }
+                    // Update selective states
+                    relays.forEach(r => {
+                        if(r.state) activeRelays++;
+                        const card = document.getElementById(`relay-card-${r.id}`);
+                        const chk = document.getElementById(`relay-chk-${r.id}`);
+                        const status = document.getElementById(`relay-status-${r.id}`);
+                        if (card && chk && status) {
+                            card.classList.toggle('active', !!r.state);
+                            chk.checked = !!r.state;
+                            status.innerHTML = r.state ? 'Status: <span style="color:var(--green)">AKTIF</span>' : 'Status: MATI';
+                        }
+                    });
                     document.getElementById('k-r').innerHTML = activeRelays + '<span>/ 4 ON</span>';
                 }
             } catch (e) { console.error('Relays sync error:', e); }
@@ -229,26 +359,22 @@
             try {
                 const data = await api('GET', '/sensors/latest');
                 if (data && !data.error) {
-                    const pVal = parseFloat(data.power) || 0;
-                    const iVal = parseFloat(data.current) || 0;
-                    const eVal = parseFloat(data.energy) || 0;
-                    
-                    document.getElementById('k-p').innerHTML = Math.round(pVal) + '<span>W</span>';
-                    document.getElementById('k-i').innerHTML = iVal.toFixed(2) + '<span>A</span>';
-                    document.getElementById('k-e').innerHTML = eVal.toFixed(2) + '<span>kWh</span>';
-
-                    const costVal = (eVal * tariff);
-                    const costFormatted = costVal.toLocaleString('id-ID');
-                    document.getElementById('k-c').textContent = `Rp ${costFormatted}`;
-                    
-                    document.getElementById('u-detail').innerHTML = `
-                        PWR: ${Math.round(pVal)}W | CUR: ${iVal.toFixed(2)}A | RLY: ${activeRelays}/4<br>
-                        NRG: ${eVal.toFixed(3)}kWh | COST: Rp ${costFormatted}
-                    `;
+                    let totalP = 0;
+                    for (let s = 1; s <= 3; s++) {
+                        const sData = data[`sensor${s}`];
+                        if (sData) {
+                            document.getElementById(`s${s}-p`).innerHTML = Math.round(sData.power) + '<span>W</span>';
+                            document.getElementById(`s${s}-v`).innerHTML = (sData.voltage || 0).toFixed(1) + '<span>V</span>';
+                            document.getElementById(`s${s}-i`).innerHTML = (sData.current || 0).toFixed(2) + '<span>A</span>';
+                            document.getElementById(`s${s}-e`).innerHTML = (sData.energy || 0).toFixed(2) + '<span>kWh</span>';
+                            totalP += parseFloat(sData.power) || 0;
+                        }
+                    }
+                    document.getElementById('total-p-all').innerHTML = Math.round(totalP) + '<span>W</span>';
                     
                     if (chart) {
                         chart.data.labels.push(""); 
-                        chart.data.datasets[0].data.push(pVal);
+                        chart.data.datasets[0].data.push(totalP);
                         if(chart.data.labels.length > 20) { 
                             chart.data.labels.shift(); 
                             chart.data.datasets[0].data.shift(); 
@@ -282,6 +408,27 @@
     }, 1000);
 
     initChart(); loadConfig(); sync(); setInterval(sync, 3000);
-  </script>
+  
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        document.getElementById('theme-toggle').innerHTML = newTheme === 'light' ? '🌙 Mode Gelap' : '🌞 Mode Terang';
+        
+        if (typeof chart !== 'undefined' && chart) {
+            chart.options.scales.y.grid.color = newTheme === 'light' ? '#e2e8f0' : '#222730';
+            chart.options.scales.y.ticks.color = newTheme === 'light' ? '#64748b' : '#5a6476';
+            chart.update();
+        }
+    }
+    window.addEventListener('DOMContentLoaded', () => {
+        const st = localStorage.getItem('theme');
+        if (st === 'light') {
+            const tt = document.getElementById('theme-toggle');
+            if(tt) tt.innerHTML = '🌙 Mode Gelap';
+        }
+    });
+</script>
 </body>
 </html>

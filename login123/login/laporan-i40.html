@@ -6,226 +6,442 @@
   <title>PSTI — Laporan Energi & Biaya</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg:        #0b0e11;
-      --surface:   #111417;
-      --panel:     #161a1f;
-      --border:    #222730;
-      --border2:   #2e3540;
-      --text:      #d0d8e4;
-      --muted:     #5a6476;
-      --green:     #00c97a;
-      --amber:     #f5a623;
-      --red:       #f04d4d;
-      --blue:      #4da6ff;
-      --mono: 'IBM Plex Mono', monospace;
-      --sans: 'IBM Plex Sans', sans-serif;
-    }
+    <style>
+        :root {
+            --bg:        #0b0e11;
+            --surface:   #111417;
+            --panel:     #161a1f;
+            --border:    #222730;
+            --border2:   #2e3540;
+            --text:      #d0d8e4;
+            --muted:     #5a6476;
+            --green:     #00c97a;
+            --amber:     #f5a623;
+            --red:       #f04d4d;
+            --blue:      #4da6ff;
+            --grid-line: rgba(77,166,255,.01);
+            --hover-bg:  rgba(255,255,255,0.02);
+            --mono: 'IBM Plex Mono', monospace;
+            --sans: 'IBM Plex Sans', sans-serif;
+        }
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --sidebar: #ffffff;
+            --card: #ffffff;
+            --panel: #ffffff;
+            --border: #e2e8f0;
+            --border2: #cbd5e1;
+            --text-main: #0f172a;
+            --text: #0f172a;
+            --text-dim: #64748b;
+            --muted: #64748b;
+            --accent: #2563eb;
+            --amber: #d97706;
+            --green: #059669;
+            --red: #dc2626;
+            --blue: #2563eb;
+            --grid-line: rgba(37,99,235,.03);
+            --hover-bg: rgba(0,0,0,0.03);
+        }
+    
 
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-    body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; }
-    body::before {
-      content: ''; position: fixed; inset: 0;
-      background-image: linear-gradient(rgba(77,166,255,.015) 1px, transparent 1px), linear-gradient(90deg, rgba(77,166,255,.015) 1px, transparent 1px);
-      background-size: 40px 40px; z-index: 0; pointer-events: none;
-    }
+        body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+        
+        /* Background Grid */
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image: linear-gradient(var(--grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 50px 50px; z-index: 0; pointer-events: none;
+        }
 
-    .topbar {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
-      font-family: var(--mono); font-size: 11px; position: relative; z-index: 10;
-    }
-    .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .topbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px 25px; background: var(--surface); border-bottom: 1px solid var(--border);
+            font-family: var(--mono); font-size: 12px; position: sticky; top:0; z-index: 100;
+        }
 
-    .main { position: relative; z-index: 1; padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .main { position: relative; z-index: 1; padding: 25px; max-width: 1200px; margin: 0 auto; }
 
-    .section-label { font-family: var(--mono); font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--muted); display:flex; align-items:center; gap:10px; margin-bottom: 12px; }
-    .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+        /* ── CONTROL PANEL ── */
+        .control-panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
 
-    .btn-primary { padding: 8px 14px; background: rgba(77,166,255,0.1); border: 1px solid var(--border); border-radius: 3px; color: var(--blue); font-family: var(--mono); font-size: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; text-transform:uppercase; }
-    .btn-primary:hover { border-color: var(--blue); }
+        .control-group { display: flex; flex-direction: column; gap: 10px; }
+        .control-label { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+        
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
 
-    .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 16px; }
-    .day-box { text-align: center; padding: 12px; background: #0d1014; border: 1px solid var(--border); border-radius: 4px; }
-    .day-name { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-bottom: 4px; }
-    .day-value { font-family: var(--mono); font-size: 15px; font-weight: 600; }
+        .btn-tab {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
 
-    .stat-box { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 12px; text-align: center; }
-    .stat-label { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-bottom: 6px; }
-    .stat-value { font-family: var(--mono); font-size: 16px; font-weight: 600; }
+        .btn-tab:hover { border-color: var(--blue); color: var(--text); }
+        .btn-tab.active { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 0 15px rgba(77,166,255,0.3); }
+        
+        .btn-danger { background: rgba(240,77,77,0.1); border-color: rgba(240,77,77,0.2); color: var(--red); }
+        .btn-danger:hover { background: var(--red); border-color: var(--red); color: #fff; }
 
-    table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 10px; }
-    th { padding: 8px 10px; text-align: left; color: var(--muted); font-weight: 600; background: var(--surface); }
-    td { padding: 8px 10px; border-bottom: 1px solid var(--border2); }
+        /* ── WEEKLY GRID ── */
+        .report-section { display: none; animation: fadeIn 0.3s ease; }
+        .report-section.active { display: block; }
 
-    @media print { .topbar, .btns-nav { display: none !important; } body { background: white; color: black; } }
-  </style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-header { 
+            display: flex; align-items: center; gap: 15px; margin-bottom: 15px;
+            font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--blue);
+        }
+        .section-header::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        .week-container {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .day-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 15px 10px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .day-card:hover { transform: translateY(-3px); border-color: var(--blue); }
+        .day-name { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+        .day-val { font-family: var(--mono); font-size: 16px; font-weight: 600; color: var(--text); }
+        .day-val span { font-size: 12px; color: var(--muted); }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .sum-box {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .sum-lab { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 10px; text-transform: uppercase; }
+        .sum-val { font-family: var(--mono); font-size: 20px; font-weight: 600; color: var(--text); }
+
+        /* ── TABLE ── */
+        .table-wrap {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+        th { padding: 15px; text-align: left; background: var(--surface); color: var(--muted); font-weight: 600; text-transform: uppercase; border-bottom: 2px solid var(--border); }
+        td { padding: 12px 15px; border-bottom: 1px solid var(--border2); color: var(--text); }
+        tr:hover td { background: var(--hover-bg); }
+
+        .cost-col { color: var(--amber); font-weight: 600; }
+
+        @media (max-width: 900px) {
+            .week-container { grid-template-columns: repeat(4, 1fr); }
+            .stats-summary { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media print {
+            .topbar, .control-panel { display: none !important; }
+            body { background: #fff; color: #000; }
+            .main { padding: 0; max-width: 100%; }
+            .day-card, .sum-box, .table-wrap { border-color: #eee !important; box-shadow: none !important; }
+            .day-val, .sum-val { color: #000 !important; }
+        }
+    </style>
+
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
 </head>
 <body>
 
-  <div class="topbar">
-    <div class="topbar-left">
-      <span style="font-weight:600;color:var(--text);font-size:12px">PSTI · Reporting Unit</span>
-      <span style="color:var(--border); margin:0 10px">|</span>
-      <span>NODE: <span style="color:var(--text)">ESP32 DevKit</span></span>
-    </div>
-    <div class="topbar-right">
-      <span id="clock" style="font-family:var(--mono); color:var(--text)">00:00:00</span>
-      <span style="background:rgba(0,201,122,.15);border:1px solid rgba(0,201,122,.3);border-radius:2px;color:var(--green);font-family:var(--mono);font-size:10px;font-weight:600;padding:4px 8px; display:flex; align-items:center; gap:4px;">
-        <span style="width:6px;height:6px;border-radius:50%;background:var(--green);"></span>Online
-      </span>
-      <button class="btn-primary" onclick="window.location.href='relay-control-i40.html'">← Dasbor</button>
-      <button class="btn-primary" onclick="printWeeklyReport()" style="border-color:var(--green); color:var(--green)">🖨️ Cetak Audit</button>
-    </div>
-  </div>
-
-  <div class="main">
-    <div class="section-label">Report View Selection</div>
-    <div class="btns-nav" style="display:flex; gap:8px; margin-bottom:20px;">
-      <button class="btn-primary" onclick="showReport('weekly')" id="btn-weekly">📊 Mingguan</button>
-      <button class="btn-primary" onclick="showReport('daily')" id="btn-daily">📅 Audit Harian</button>
-    </div>
-
-    <!-- WEEKLY -->
-    <div id="weekly-report">
-      <div class="section-label">Konsumsi Energi & Estimasi Biaya</div>
-      <div style="background:var(--panel); border:1px solid var(--border); border-radius:4px; padding:16px; margin-bottom:20px;">
-        <div class="week-grid" id="weekGrid"></div>
-        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
-          <div class="stat-box"><div class="stat-label">TOTAL LISTRIK</div><div class="stat-value" id="week-total">0.00 kWh</div></div>
-          <div class="stat-box" style="border-color:var(--amber)"><div class="stat-label" style="color:var(--amber)">TOTAL TAGIHAN</div><div class="stat-value" id="week-cost">Rp 0</div></div>
-          <div class="stat-box"><div class="stat-label">RATA-RATA</div><div class="stat-value" id="week-avg">0.00 kWh</div></div>
-          <div class="stat-box"><div class="stat-label">LOG TERREKAM</div><div class="stat-value" id="week-logs">0</div></div>
+    <div class="topbar">
+        <div class="topbar-left">
+            <span style="color:var(--blue); font-weight:600">PSTI · INDUSTRIAL REPORTING</span>
+            <span style="margin:0 15px; color:var(--border)">|</span>
+            <span id="clock">00:00:00</span>
         </div>
-      </div>
+        <div class="topbar-right">
+            <button onclick="toggleTheme()" id="theme-toggle" style="background:transparent; border:1px solid var(--border); border-radius:2px; color:var(--text); font-family:var(--mono); font-size:12px; font-weight:600; padding:4px 10px; cursor:pointer;">🌞 Mode Terang</button>
+            <button class="btn-tab" onclick="window.location.href='relay-control-i40.html'" style="padding: 6px 12px;">← KEMBALI</button>
+            <button class="btn-tab" onclick="printWeeklyReport()" style="background:var(--green); border-color:var(--green); color:#fff; padding: 6px 12px;">🖨️ CETAK PDF</button>
+        
+        </div>
     </div>
 
-    <!-- DAILY -->
-    <div id="daily-report" style="display:none;">
-      <div class="section-label">Detail Transaksi Energi Harian</div>
-      <div style="background:var(--panel); border:1px solid var(--border); border-radius:4px; overflow:auto">
-        <table>
-          <thead><tr><th>Waktu</th><th>Tegangan</th><th>Arus</th><th>Daya</th><th>Energi</th><th>Biaya (Est)</th></tr></thead>
-          <tbody id="dataTable"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const API_BASE = '/api';
-    let energySnapshot = [0,0,0,0,0,0,0], tariff = 1444.7, logsCount = 0;
-
-    async function apiRequest(url) {
-        const token = sessionStorage.getItem('auth_token');
-        const res = await fetch(`${API_BASE}${url}`, { headers: { 'Authorization': `Bearer ${token}` } });
-        return res.json();
-    }
-
-    async function loadData() {
-        try {
-            const token = sessionStorage.getItem('auth_token');
-            if (!token) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            const tariffRes = await apiRequest('/settings/electricity_tariff');
-            if (tariffRes && tariffRes.error === 'Invalid token') {
-                window.location.href = 'login.html';
-                return;
-            }
-            if (tariffRes && tariffRes.value) tariff = parseFloat(tariffRes.value);
-
-            const data = await apiRequest('/sensors?limit=1000');
-            if (data && data.error === 'Invalid token') {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            if (!data || !Array.isArray(data)) return;
-
-            logsCount = data.length;
-            energySnapshot = [0,0,0,0,0,0,0];
-            data.forEach(r => { 
-                const d = new Date(r.timestamp);
-                if (!isNaN(d.getTime())) {
-                    energySnapshot[d.getDay()] = Math.max(energySnapshot[d.getDay()], parseFloat(r.energy) || 0); 
-                }
-            });
-
-            const days = ['MINGGU','SENIN','SELASA','RABU','KAMIS','JUMAT','SABTU'];
-            document.getElementById('weekGrid').innerHTML = energySnapshot.map((v, i) => `
-                <div class="day-box">
-                    <div class="day-name">${days[i]}</div>
-                    <div class="day-value">${v.toFixed(2)} <span style="font-size:8px; color:var(--muted)">kWh</span></div>
+    <div class="main">
+        
+        <!-- CONTROL PANEL -->
+        <div class="control-panel">
+            <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+                <!-- SENSOR SELECTION -->
+                <div class="control-group">
+                    <div class="control-label">Pilih Sensor Mana?</div>
+                    <div class="btn-row">
+                        <button class="btn-tab sensor-btn active" onclick="setSensor(1)" id="s-btn-1">Sensor 01</button>
+                        <button class="btn-tab sensor-btn" onclick="setSensor(2)" id="s-btn-2">Sensor 02</button>
+                        <button class="btn-tab sensor-btn" onclick="setSensor(3)" id="s-btn-3">Sensor 03</button>
+                        <button class="btn-tab sensor-btn" onclick="setSensor('all')" id="s-btn-all" style="border-color:var(--amber); color:var(--amber)">Σ Gabungan (Total)</button>
+                    </div>
                 </div>
-            `).join('');
 
-            const totalKwh = energySnapshot.reduce((a,b)=>a+b,0);
-            document.getElementById('week-total').textContent = totalKwh.toFixed(2) + ' kWh';
-            document.getElementById('week-cost').textContent = 'Rp ' + (totalKwh * tariff).toLocaleString('id-ID');
-            document.getElementById('week-avg').textContent = (totalKwh/7).toFixed(2) + ' kWh';
-            document.getElementById('week-logs').textContent = logsCount;
+                <!-- VIEW SELECTION -->
+                <div class="control-group">
+                    <div class="control-label">Mau Lihat Laporan Apa?</div>
+                    <div class="btn-row">
+                        <button class="btn-tab view-btn active" onclick="showReport('weekly')" id="v-btn-weekly">📊 Grafik Mingguan</button>
+                        <button class="btn-tab view-btn" onclick="showReport('daily')" id="v-btn-daily">📅 Catatan Harian (Audit)</button>
+                    </div>
+                </div>
 
-            document.getElementById('dataTable').innerHTML = data.slice(0, 50).map(r => `
-                <tr>
-                    <td>${new Date(r.timestamp).toLocaleString()}</td>
-                    <td>${(parseFloat(r.voltage) || 0).toFixed(1)}V</td>
-                    <td>${(parseFloat(r.current) || 0).toFixed(2)}A</td>
-                    <td>${Math.round(parseFloat(r.power) || 0)}W</td>
-                    <td>${(parseFloat(r.energy) || 0).toFixed(2)}kWh</td>
-                    <td style="color:var(--amber)">Rp ${( (parseFloat(r.energy)||0) * tariff).toFixed(0)}</td>
-                </tr>
-            `).join('');
-        } catch(e) {
-            console.error('Load report data failed:', e);
+                <!-- ACTIONS -->
+                <div class="control-group" style="margin-left: auto;">
+                    <div class="control-label">Atur Data</div>
+                    <button class="btn-tab btn-danger" onclick="clearAuditData(this)">🗑️ Hapus Semua Catatan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- WEEKLY ANALYTICS -->
+        <div id="weekly-report" class="report-section active">
+            <div class="section-header" id="weekly-title">Ringkasan Pemakaian Seminggu</div>
+            
+            <div class="week-container" id="weekGrid">
+                <!-- Days injected by JS -->
+            </div>
+
+            <div class="stats-summary">
+                <div class="sum-box"><div class="sum-lab">Total Listrik Terpakai</div><div class="sum-val" id="week-total">0.00 kWh</div></div>
+                <div class="sum-box" style="border-color:var(--amber)"><div class="sum-lab" style="color:var(--amber)">Perkiraan Biaya (Tagihan)</div><div class="sum-val" id="week-cost">Rp 0</div></div>
+                <div class="sum-box"><div class="sum-lab">Rata-rata Sehari</div><div class="sum-val" id="week-avg">0.00 kWh</div></div>
+                <div class="sum-box"><div class="sum-lab">Jumlah Catatan Data</div><div class="sum-val" id="week-logs">0</div></div>
+            </div>
+        </div>
+
+        <!-- DAILY AUDIT LOG -->
+        <div id="daily-report" class="report-section">
+            <div class="section-header" id="daily-title">Catatan Detail Harian</div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Waktu & Jam</th>
+                            <th>Sumber</th>
+                            <th>Tegangan</th>
+                            <th>Arus</th>
+                            <th>Daya (W)</th>
+                            <th>Total (kWh)</th>
+                            <th>Biaya (Est)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTable">
+                        <!-- Rows injected by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        let energySnapshot = [0,0,0,0,0,0,0], tariff = 1444.7, logsCount = 0;
+        let currentSensor = 1;
+
+        async function apiRequest(url) {
+            const token = sessionStorage.getItem('auth_token');
+            const res = await fetch(`${API_BASE}${url}`, { 
+                headers: { 'Authorization': `Bearer ${token}` },
+                cache: 'no-store'
+            });
+            if (res.status === 401) { window.location.href = 'login.html'; return; }
+            return res.json();
+        }
+
+        function setSensor(sid) {
+            currentSensor = sid;
+            document.querySelectorAll('.sensor-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`s-btn-${sid}`).classList.add('active');
+            
+            const title = sid === 'all' ? 'Gabungan Semua Sensor' : `Sensor 0${sid}`;
+            document.getElementById('weekly-title').textContent = `Grafik Pemakaian: ${title}`;
+            document.getElementById('daily-title').textContent = `Catatan Harian: ${title}`;
+            loadData();
+        }
+
+        function showReport(type) {
+            document.querySelectorAll('.report-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`${type}-report`).classList.add('active');
+            document.getElementById(`v-btn-${type}`).classList.add('active');
+        }
+
+        async function loadData() {
+            try {
+                const tariffRes = await apiRequest('/settings/electricity_tariff');
+                if (tariffRes && tariffRes.value) tariff = parseFloat(tariffRes.value);
+
+                let data = [];
+                if (currentSensor === 'all') {
+                    // Fetch all sensors and combine
+                    const res = await apiRequest(`/sensors?limit=1500`);
+                    data = res;
+                } else {
+                    data = await apiRequest(`/sensors/${currentSensor}?limit=1000`);
+                }
+
+                if (!data || !Array.isArray(data)) return;
+
+                logsCount = data.length;
+                energySnapshot = [0,0,0,0,0,0,0];
+                
+                if (currentSensor === 'all') {
+                    // Aggregate: Sum max energy per sensor per day
+                    const dailyMap = [{},{},{},{},{},{},{}]; // [ {s1:max, s2:max...}, ... ]
+                    data.forEach(r => {
+                        const d = new Date(r.timestamp);
+                        if (!isNaN(d.getTime())) {
+                            const day = d.getDay();
+                            const sid = r.sensor_id;
+                            const e = parseFloat(r.energy) || 0;
+                            if (!dailyMap[day][sid] || e > dailyMap[day][sid]) {
+                                dailyMap[day][sid] = e;
+                            }
+                        }
+                    });
+                    // Sum those maxes
+                    for(let i=0; i<7; i++) {
+                        energySnapshot[i] = Object.values(dailyMap[i]).reduce((a,b)=>a+b, 0);
+                    }
+                } else {
+                    data.forEach(r => { 
+                        const d = new Date(r.timestamp);
+                        if (!isNaN(d.getTime())) {
+                            energySnapshot[d.getDay()] = Math.max(energySnapshot[d.getDay()], parseFloat(r.energy) || 0); 
+                        }
+                    });
+                }
+
+                const days = ['MINGGU','SENIN','SELASA','RABU','KAMIS','JUMAT','SABTU'];
+                document.getElementById('weekGrid').innerHTML = energySnapshot.map((v, i) => `
+                    <div class="day-card">
+                        <div class="day-name">${days[i]}</div>
+                        <div class="day-val">${v.toFixed(2)}<span>kWh</span></div>
+                    </div>
+                `).join('');
+
+                const totalKwh = energySnapshot.reduce((a,b)=>a+b,0);
+                document.getElementById('week-total').textContent = totalKwh.toFixed(2) + ' kWh';
+                document.getElementById('week-cost').textContent = 'Rp ' + (totalKwh * tariff).toLocaleString('id-ID');
+                document.getElementById('week-avg').textContent = (totalKwh/7).toFixed(2) + ' kWh';
+                document.getElementById('week-logs').textContent = logsCount;
+
+                document.getElementById('dataTable').innerHTML = data.slice(0, 100).map(r => `
+                    <tr>
+                        <td>${new Date(r.timestamp).toLocaleString('id-ID')}</td>
+                        <td style="color:var(--blue)">${r.sensor_id ? 'Sensor ' + r.sensor_id : 'S'+currentSensor}</td>
+                        <td>${(parseFloat(r.voltage) || 0).toFixed(1)}V</td>
+                        <td>${(parseFloat(r.current) || 0).toFixed(2)}A</td>
+                        <td>${Math.round(parseFloat(r.power) || 0)}W</td>
+                        <td>${(parseFloat(r.energy) || 0).toFixed(2)}kWh</td>
+                        <td class="cost-col">Rp ${( (parseFloat(r.energy)||0) * tariff).toFixed(0)}</td>
+                    </tr>
+                `).join('');
+            } catch(e) { console.error('Report failed:', e); }
+        }
+
+        async function clearAuditData(btn) {
+            const originalText = btn.innerHTML;
+
+            if (!confirm(`⚠️ PERINGATAN: Hapus SEMUA data Sensor ${currentSensor}?\n\nTindakan ini permanen.`)) return;
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = 'Menghapus...';
+                btn.style.opacity = '0.5';
+
+                const token = sessionStorage.getItem('auth_token');
+                const res = await fetch(`${API_BASE}/sensors/${currentSensor}`, { 
+                    method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } 
+                });
+                const resData = await res.json();
+                if (resData.success) { 
+                    loadData(); 
+                    setTimeout(() => alert("✅ Data berhasil dikosongkan."), 100);
+                }
+            } catch(e) {
+                console.error('Delete failed:', e);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                btn.style.opacity = '1';
+            }
+        }
+
+        function printWeeklyReport() {
+            window.print();
+        }
+
+        setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('id-id'); }, 1000);
+        
+        // Init
+        const urlParams = new URLSearchParams(window.location.search);
+        const sParam = parseInt(urlParams.get('s'));
+        setSensor(sParam >= 1 && sParam <= 3 ? sParam : 1);
+    
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        document.getElementById('theme-toggle').innerHTML = newTheme === 'light' ? '🌙 Mode Gelap' : '🌞 Mode Terang';
+        
+        if (typeof chart !== 'undefined' && chart) {
+            chart.options.scales.y.grid.color = newTheme === 'light' ? '#e2e8f0' : '#222730';
+            chart.options.scales.y.ticks.color = newTheme === 'light' ? '#64748b' : '#5a6476';
+            chart.update();
         }
     }
-
-    function showReport(type) {
-        document.getElementById('weekly-report').style.display = type==='weekly'?'block':'none';
-        document.getElementById('daily-report').style.display = type==='daily'?'block':'none';
-    }
-
-    function printWeeklyReport() {
-      const totalK = energySnapshot.reduce((a,b)=>a+b,0);
-      const win = window.open('', '', 'width=900,height=1000');
-      win.document.write(`
-        <html><head><style>
-          body { font-family: sans-serif; padding: 40px; }
-          .hdr { border-bottom: 2px solid #0066cc; padding-bottom: 10px; margin-bottom: 20px; }
-          .grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 10px; margin: 20px 0; }
-          .box { border: 1px solid #ddd; padding: 10px; text-align: center; }
-          .sum { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: #f0f7ff; padding: 20px; border: 1px solid #0066cc; }
-          table { width: 100%; border-collapse: collapse; margin-top: 30px; }
-          th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-          th { background: #0066cc; color: white; }
-        </style></head><body>
-          <div class="hdr"><h1>AUDIT ENERGI & BIAYA MINGGUAN</h1><p>PSTI · Sistem Monitoring Mandiri</p></div>
-          <div class="sum">
-            <div><strong>TOTAL KONSUMSI:</strong> ${totalK.toFixed(2)} kWh</div>
-            <div><strong>ESTIMASI TAGIHAN:</strong> Rp ${(totalK*tariff).toLocaleString('id-ID')}</div>
-          </div>
-          <div class="grid">
-            ${['MGU','SEN','SEL','RAB','KAM','JUM','SAB'].map((d,i)=>`<div class="box"><b>${d}</b><br>${energySnapshot[i].toFixed(2)}</div>`).join('')}
-          </div>
-          <table>
-            <tr><th>Metrik</th><th>Nilai</th></tr>
-            <tr><td>Total Titik Data</td><td>${logsCount} Titik</td></tr>
-            <tr><td>Rata-rata Harian</td><td>${(totalK/7).toFixed(2)} kWh</td></tr>
-            <tr><td>Tarif Dasar</td><td>Rp ${tariff} / kWh</td></tr>
-          </table>
-          <p style="text-align:center; font-size:10px; color:#777; margin-top:50px">Laporan Otomatis Sistem PSTI · 2026</p>
-        </body></html>
-      `);
-      win.document.close(); win.print();
-    }
-
-    setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('id-id'); }, 1000);
-    loadData();
-  </script>
+    window.addEventListener('DOMContentLoaded', () => {
+        const st = localStorage.getItem('theme');
+        if (st === 'light') {
+            const tt = document.getElementById('theme-toggle');
+            if(tt) tt.innerHTML = '🌙 Mode Gelap';
+        }
+    });
+</script>
 </body>
 </html>

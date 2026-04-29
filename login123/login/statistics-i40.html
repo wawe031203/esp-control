@@ -7,363 +7,583 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg:        #0b0e11;
-      --surface:   #111417;
-      --panel:     #161a1f;
-      --border:    #222730;
-      --border2:   #2e3540;
-      --text:      #d0d8e4;
-      --muted:     #5a6476;
-      --green:     #00c97a;
-      --amber:     #f5a623;
-      --red:       #f04d4d;
-      --blue:      #4da6ff;
-      --mono: 'IBM Plex Mono', monospace;
-      --sans: 'IBM Plex Sans', sans-serif;
-    }
+        :root {
+            --bg:        #0b0e11;
+            --surface:   #111417;
+            --panel:     #161a1f;
+            --border:    #222730;
+            --border2:   #2e3540;
+            --text:      #d0d8e4;
+            --muted:     #5a6476;
+            --green:     #00c97a;
+            --amber:     #f5a623;
+            --red:       #f04d4d;
+            --blue:      #4da6ff;
+            --input-bg:  #0d1014;
+            --btn-bg:    rgba(77,166,255,.12);
+            --btn-border:rgba(77,166,255,.25);
+            --btn-hover: rgba(77,166,255,.22);
+            --mono: 'IBM Plex Mono', monospace;
+            --sans: 'IBM Plex Sans', sans-serif;
+        }
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --sidebar: #ffffff;
+            --card: #ffffff;
+            --panel: #ffffff;
+            --border: #e2e8f0;
+            --border2: #cbd5e1;
+            --text-main: #0f172a;
+            --text: #0f172a;
+            --text-dim: #64748b;
+            --muted: #64748b;
+            --accent: #2563eb;
+            --amber: #d97706;
+            --green: #059669;
+            --red: #dc2626;
+            --blue: #2563eb;
+            --input-bg: #f1f5f9;
+            --btn-bg:    rgba(37,99,235,.12);
+            --btn-border:rgba(37,99,235,.25);
+            --btn-hover: rgba(37,99,235,.22);
+        }
+    
 
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-    body {
-      font-family: var(--sans);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
 
-    /* ── TOPBAR ── */
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 20px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      font-family: var(--mono);
-      font-size: 11px;
-      gap: 12px;
-    }
+        /* ── TOPBAR ── */
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            font-family: var(--mono);
+            font-size: 12px;
+            gap: 12px;
+        }
 
-    .topbar-left, .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+        .topbar-left, .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-    .tb-sep { color: var(--border); }
+        .tb-sep { color: var(--border); }
 
-    /* ── MAIN ── */
-    .main {
-      padding: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+        /* ── MAIN ── */
+        .main {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-    .section-label {
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 12px;
-      display:flex; align-items:center; gap:10px;
-    }
-    .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
+        .section-label {
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 12px;
+            display:flex; align-items:center; gap:10px;
+        }
+        .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
 
-    /* ── BUTTON ── */
-    .btn-primary {
-      padding: 8px 14px;
-      background: rgba(77,166,255,.12);
-      border: 1px solid rgba(77,166,255,.25);
-      border-radius: 3px;
-      color: var(--blue);
-      font-family: var(--mono);
-      font-size: 10px; font-weight: 600;
-      letter-spacing: .06em; text-transform: uppercase;
-      cursor: pointer;
-      transition: background .2s, border-color .2s;
-    }
-    .btn-primary:hover {
-      background: rgba(77,166,255,.22);
-      border-color: var(--blue);
-    }
+        /* ── TABS ── */
+        .sensor-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
 
-    /* ── CONTROL BAR ── */
-    .control-bar {
-      display: flex; gap: 8px; align-items: center;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
+        .tab-btn {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            transition: 0.2s;
+        }
 
-    /* ── STATS GRID ── */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
+        .tab-btn:hover { border-color: var(--blue); color: var(--text); }
+        .tab-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
 
-    .stat-card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 16px;
-      text-align: center;
-    }
+        /* ── BUTTON ── */
+        .btn-primary {
+            padding: 8px 14px;
+            background: var(--btn-bg);
+            border: 1px solid var(--btn-border);
+            border-radius: 3px;
+            color: var(--blue);
+            font-family: var(--mono);
+            font-size: 12px; font-weight: 600;
+            letter-spacing: .06em; text-transform: uppercase;
+            cursor: pointer;
+            transition: background .2s, border-color .2s;
+        }
+        .btn-primary:hover {
+            background: var(--btn-hover);
+            border-color: var(--blue);
+        }
 
-    .stat-label {
-      font-family: var(--mono);
-      font-size: 9px;
-      color: var(--muted);
-      margin-bottom: 8px;
-      letter-spacing: .08em;
-    }
+        /* ── CONTROL BAR ── */
+        .control-bar {
+            display: flex; gap: 8px; align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
 
-    .stat-value {
-      font-family: var(--mono);
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text);
-    }
+        /* ── STATS GRID ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
 
-    /* ── SETTINGS ── */
-    .settings-box {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
+        .stat-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 16px;
+            text-align: center;
+        }
 
-    .settings-box label {
-      font-family: var(--mono);
-      font-size: 10px;
-      color: var(--muted);
-      display: block;
-      margin-bottom: 6px;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-    }
+        .stat-label {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 8px;
+            letter-spacing: .08em;
+        }
 
-    .settings-box input, .settings-box select {
-      width: 100%;
-      padding: 8px;
-      background: #0d1014;
-      border: 1px solid var(--border);
-      color: var(--text);
-      font-family: var(--mono);
-      border-radius: 2px;
-      margin-bottom: 12px;
-    }
+        .stat-value {
+            font-family: var(--mono);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+        }
 
-    .settings-row {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-    }
+        /* ── SETTINGS ── */
+        .settings-box {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 768px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .settings-row { grid-template-columns: 1fr; }
-    }
+        .settings-box label {
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 6px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
 
-    @media (max-width: 480px) {
-      .main { padding: 12px; }
-      .stats-grid { grid-template-columns: 1fr; }
-      .topbar { flex-direction: column; align-items: flex-start; gap: 8px; }
-      .topbar-right { width: 100%; justify-content: space-between; }
-    }
-  </style>
+        .settings-box input, .settings-box select {
+            width: 100%;
+            padding: 8px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: var(--mono);
+            border-radius: 2px;
+            margin-bottom: 12px;
+        }
+
+        .settings-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        /* ── LOADING SPINNER ── */
+        .spinner {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .settings-row { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 480px) {
+            .main { padding: 12px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .topbar { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .topbar-right { width: 100%; justify-content: space-between; }
+        }
+    </style>
+
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
 </head>
 <body>
 
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="topbar-left">
-      <span style="font-weight:600;color:var(--text);font-size:12px;letter-spacing:.06em">PSTI · Statistik Energi</span>
-      <span class="tb-sep">|</span>
-      <span><span style="color:var(--muted);">NODE </span><span style="color:var(--text);font-weight:500;">ESP32 DevKit</span></span>
-      <span style="color:var(--border);">|</span>
-      <span><span style="color:var(--muted);">RELAY </span><span style="color:var(--text);font-weight:500;">4 Channel</span></span>
-      <span style="color:var(--border);">|</span>
-      <span><span style="color:var(--muted);">SENSOR </span><span style="color:var(--text);font-weight:500;">PZEM-004T</span></span>
-    </div>
-    <div class="topbar-right">
-      <span id="clock" style="color:var(--text);font-weight:500;"></span>
-      <span style="background:rgba(0,201,122,.15);border:1px solid rgba(0,201,122,.3);border-radius:2px;color:var(--green);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;padding:4px 8px; display:flex; align-items:center; gap:4px;">
-        <span style="width:6px;height:6px;border-radius:50%;background:var(--green);"></span>Online
-      </span>
-      <button onclick="window.location.href='relay-control-i40.html'" style="background:rgba(77,166,255,.1);border:1px solid rgba(77,166,255,.25);border-radius:2px;color:var(--blue);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;cursor:pointer;">← Dasbor</button>
-      <button onclick="window.location.href='statistics-i40.html'" style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3);border-radius:2px;color:var(--amber);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;cursor:pointer;">📈 Statistik</button>
-      <button onclick="window.location.href='laporan-i40.html'" style="background:rgba(0,201,122,.1);border:1px solid rgba(0,201,122,.25);border-radius:2px;color:var(--green);font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;cursor:pointer;">📋 Laporan</button>
-    </div>
-  </div>
-
-  <!-- MAIN CONTENT -->
-  <div class="main">
-
-    <!-- STATISTICS -->
-    <div class="section-label">Statistik Harian</div>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Tegangan Min</div>
-        <div class="stat-value" id="stat-vol-min">— V</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Tegangan Max</div>
-        <div class="stat-value" id="stat-vol-max">— V</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Tegangan Rata-rata</div>
-        <div class="stat-value" id="stat-vol-avg">— V</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Frekuensi</div>
-        <div class="stat-value" id="stat-freq">50.0<span style="font-size:11px;">Hz</span></div>
-      </div>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Arus Min</div>
-        <div class="stat-value" id="stat-cur-min">— A</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Arus Max</div>
-        <div class="stat-value" id="stat-cur-max">— A</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Arus Rata-rata</div>
-        <div class="stat-value" id="stat-cur-avg">— A</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Faktor Daya</div>
-        <div class="stat-value" id="stat-pf">0.95<span style="font-size:11px;">PF</span></div>
-      </div>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Daya Min</div>
-        <div class="stat-value" id="stat-pow-min">— W</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Daya Max</div>
-        <div class="stat-value" id="stat-pow-max">— W</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Daya Rata-rata</div>
-        <div class="stat-value" id="stat-pow-avg">— W</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Total Energi</div>
-        <div class="stat-value" id="stat-total-energy">— kWh</div>
-      </div>
-    </div>
-
-    <!-- SETTINGS -->
-    <div class="section-label" style="margin-top: 30px;">Pengaturan Recording</div>
-    <div class="settings-box">
-      <div class="settings-row">
-        <div>
-          <label>Interval Rekaman</label>
-          <select id="recordInterval">
-            <option value="30">Setiap 30 detik</option>
-            <option value="60" selected>Setiap 1 menit</option>
-            <option value="300">Setiap 5 menit</option>
-            <option value="600">Setiap 10 menit</option>
-          </select>
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <span style="font-weight:600;color:var(--text);font-size:12px;letter-spacing:.06em">PSTI · Statistik Energi</span>
+            <span class="tb-sep">|</span>
+            <span><span style="color:var(--muted);">NODE </span><span style="color:var(--text);font-weight:500;">ESP32 DevKit</span></span>
+            <span style="color:var(--border);">|</span>
+            <span><span style="color:var(--muted);">RELAY </span><span style="color:var(--text);font-weight:500;">4 Channel</span></span>
+            <span style="color:var(--border);">|</span>
+            <span><span style="color:var(--muted);">SENSORS </span><span style="color:var(--text);font-weight:500;">3x PZEM-004T</span></span>
         </div>
-        <div>
-          <label>Aktifkan Perekaman?</label>
-          <label style="display:flex; gap:8px; align-items:center; cursor:pointer; margin-top:6px;">
-            <input type="checkbox" id="recordingEnabled" checked style="width:16px; height:16px; cursor:pointer;">
-            <span style="font-family:var(--mono); color:var(--text); font-size:11px;">Aktif</span>
-          </label>
+        <div class="topbar-right">
+            <button onclick="toggleTheme()" id="theme-toggle" style="background:transparent; border:1px solid var(--border); border-radius:2px; color:var(--text); font-family:var(--mono); font-size:12px; font-weight:600; padding:4px 10px; cursor:pointer;">🌞 Mode Terang</button>
+            <span id="clock" style="color:var(--text);font-weight:500;"></span>
+            <span style="background:rgba(0,201,122,.15);border:1px solid rgba(0,201,122,.3);border-radius:2px;color:var(--green);font-family:var(--mono);font-size: 12px;font-weight:600;letter-spacing:.08em;padding:4px 8px; display:flex; align-items:center; gap:4px;">
+                <span style="width:6px;height:6px;border-radius:50%;background:var(--green);"></span>Online
+            </span>
+            <button onclick="window.location.href='relay-control-i40.html'" style="background:rgba(77,166,255,.1);border:1px solid rgba(77,166,255,.25);border-radius:2px;color:var(--blue);font-family:var(--mono);font-size: 12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;cursor:pointer;">← Dasbor</button>
+            <button onclick="window.location.href='monitoring-i40.html'" style="background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3);border-radius:2px;color:var(--amber);font-family:var(--mono);font-size: 12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;cursor:pointer;">📊 Monitor</button>
+            <button onclick="window.location.href='laporan-i40.html'" style="background:rgba(0,201,122,.1);border:1px solid rgba(0,201,122,.25);border-radius:2px;color:var(--green);font-family:var(--mono);font-size: 12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;cursor:pointer;">📋 Laporan</button>
+        
         </div>
-      </div>
     </div>
 
-    <!-- ACTION BUTTONS -->
-    <div class="control-bar">
-      <button class="btn-primary" onclick="loadStats()" style="background:rgba(77,166,255,0.1)">🔄 Refresh Audit</button>
-      <button class="btn-primary" onclick="exportHistoryCSV()" style="background:rgba(0,201,122,.1);border:1px solid rgba(0,201,122,.25);color:var(--green);">📥 Ekspor CSV</button>
-      <button class="btn-primary" onclick="window.location.href='laporan-i40.html'" style="background:rgba(77,166,255,.1);border:1px solid rgba(77,166,255,.25);color:var(--blue);">📈 Laporan Lengkap</button>
+    <!-- MAIN CONTENT -->
+    <div class="main">
+
+        <div class="section-label">Pilih Sensor</div>
+        <div class="sensor-tabs">
+            <button class="tab-btn active" onclick="setSensor(1)">Sensor 01</button>
+            <button class="tab-btn" onclick="setSensor(2)">Sensor 02</button>
+            <button class="tab-btn" onclick="setSensor(3)">Sensor 03</button>
+        </div>
+
+        <!-- STATISTICS -->
+        <div class="section-label" id="stats-title">Catatan Listrik Sensor 1</div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Tegangan Terendah</div>
+                <div class="stat-value" id="stat-vol-min">— V</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Tegangan Tertinggi</div>
+                <div class="stat-value" id="stat-vol-max">— V</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Tegangan Rata-rata</div>
+                <div class="stat-value" id="stat-vol-avg">— V</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Frekuensi Listrik</div>
+                <div class="stat-value" id="stat-freq">— Hz</div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Arus Paling Kecil</div>
+                <div class="stat-value" id="stat-cur-min">— A</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Arus Paling Besar</div>
+                <div class="stat-value" id="stat-cur-max">— A</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Arus Rata-rata</div>
+                <div class="stat-value" id="stat-cur-avg">— A</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Efisiensi (Power Factor)</div>
+                <div class="stat-value" id="stat-pf">— PF</div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Daya Paling Rendah</div>
+                <div class="stat-value" id="stat-pow-min">— W</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Daya Paling Tinggi</div>
+                <div class="stat-value" id="stat-pow-max">— W</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Daya Rata-rata</div>
+                <div class="stat-value" id="stat-pow-avg">— W</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Listrik Terpakai</div>
+                <div class="stat-value" id="stat-total-energy">— kWh</div>
+            </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="section-label" style="margin-top: 30px;">Aturan Simpan Data (Per Sensor)</div>
+        <div class="settings-box">
+            <div class="settings-row">
+                <div>
+                    <label>Simpan Data Tiap Berapa Menit?</label>
+                    <select id="recordInterval">
+                        <option value="30">Tiap 30 detik</option>
+                        <option value="60" selected>Tiap 1 menit</option>
+                        <option value="300">Tiap 5 menit</option>
+                        <option value="600">Tiap 10 menit</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Simpan Data Otomatis?</label>
+                    <label style="display:flex; gap:8px; align-items:center; cursor:pointer; margin-top:6px;">
+                        <input type="checkbox" id="recordingEnabled" checked style="width:16px; height:16px; cursor:pointer;">
+                        <span style="font-family:var(--mono); color:var(--text); font-size: 12px;">Ya, Aktifkan</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="control-bar">
+            <button class="btn-primary" onclick="loadStats()" style="background:rgba(77,166,255,0.1)">🔄 Update Data</button>
+            <button class="btn-primary" onclick="clearAuditData(this)" style="background:rgba(240,77,77,0.1); border-color:rgba(240,77,77,0.3); color:var(--red);">🗑️ Hapus Semua Catatan</button>
+            <button class="btn-primary" onclick="window.location.href='laporan-i40.html'" style="background:rgba(77,166,255,.1);border:1px solid rgba(77,166,255,.25);color:var(--blue);">📈 Lihat Laporan Lengkap</button>
+        </div>
+
     </div>
 
-  </div>
+    <script>
+        const API_BASE = '/api';
+        let currentSensor = 1;
 
-  <script>
-    const API_BASE = '/api';
-
-    async function apiRequest(url) {
-        const token = sessionStorage.getItem('auth_token');
-        const res = await fetch(`${API_BASE}${url}`, { headers: { 'Authorization': `Bearer ${token}` } });
-        return res.json();
-    }
-
-    async function loadStats() {
-        try {
+        async function apiRequest(url) {
             const token = sessionStorage.getItem('auth_token');
-            if (!token) {
-                window.location.href = 'login.html';
-                return;
+            const res = await fetch(`${API_BASE}${url}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.status === 401) { window.location.href = 'login.html'; return; }
+            return res.json();
+        }
+
+        function setSensor(sid) {
+            currentSensor = sid;
+            document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', (idx + 1) === sid);
+            });
+            document.getElementById('stats-title').textContent = `Catatan Listrik Sensor 0${sid}`;
+            loadStats();
+            loadRecordingSettings();
+        }
+
+        async function loadStats() {
+            try {
+                // Ambil data untuk sensor spesifik
+                const data = await apiRequest(`/sensors/${currentSensor}?limit=1000`);
+                if (!data) return; // Handled by apiRequest redirect if 401
+
+                if (!data || !Array.isArray(data) || !data.length) {
+                    // Reset fields
+                    ['vol-min','vol-max','vol-avg','cur-min','cur-max','cur-avg','pow-min','pow-max','pow-avg','total-energy','freq','pf'].forEach(id => {
+                        const el = document.getElementById(`stat-${id}`);
+                        if (el) el.textContent = '—';
+                    });
+                    return;
+                }
+
+                const vs = data.map(r => parseFloat(r.voltage)).filter(v => !isNaN(v));
+                const is = data.map(r => parseFloat(r.current)).filter(v => !isNaN(v));
+                const ps = data.map(r => parseFloat(r.power)).filter(v => !isNaN(v));
+                const es = data.map(r => parseFloat(r.energy)).filter(v => !isNaN(v));
+                
+                const avg = arr => arr.length ? (arr.reduce((a,b)=>a+b,0)/arr.length) : 0;
+
+                if (vs.length) {
+                    document.getElementById('stat-vol-min').textContent = Math.min(...vs).toFixed(1) + ' V';
+                    document.getElementById('stat-vol-max').textContent = Math.max(...vs).toFixed(1) + ' V';
+                    document.getElementById('stat-vol-avg').textContent = avg(vs).toFixed(1) + ' V';
+                }
+
+                if (is.length) {
+                    document.getElementById('stat-cur-min').textContent = Math.min(...is).toFixed(2) + ' A';
+                    document.getElementById('stat-cur-max').textContent = Math.max(...is).toFixed(2) + ' A';
+                    document.getElementById('stat-cur-avg').textContent = avg(is).toFixed(2) + ' A';
+                }
+
+                if (ps.length) {
+                    document.getElementById('stat-pow-min').textContent = Math.min(...ps).toFixed(0) + ' W';
+                    document.getElementById('stat-pow-max').textContent = Math.max(...ps).toFixed(0) + ' W';
+                    document.getElementById('stat-pow-avg').textContent = avg(ps).toFixed(0) + ' W';
+                }
+
+                if (es.length) {
+                    document.getElementById('stat-total-energy').textContent = Math.max(...es).toFixed(2) + ' kWh';
+                }
+                
+                const last = data[0];
+                document.getElementById('stat-freq').textContent = (parseFloat(last.frequency) || 50.0).toFixed(1) + ' Hz';
+                document.getElementById('stat-pf').textContent = (parseFloat(last.pf) || 0.00).toFixed(2) + ' PF';
+
+            } catch(e) { 
+                console.error('Stats load failed:', e); 
             }
+        }
 
-            const data = await apiRequest('/sensors?limit=1000');
-            if (data && data.error === 'Invalid token') {
-                window.location.href = 'login.html';
-                return;
+        async function clearAuditData(btn) {
+            const originalText = btn.innerHTML;
+
+            if (!confirm(`⚠️ PERINGATAN: Apakah Anda yakin ingin MENGHAPUS SEMUA riwayat data Sensor ${currentSensor}?\n\nTindakan ini tidak dapat dibatalkan.`)) return;
+            
+            try {
+                // Set loading state
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span> Menghapus...';
+                btn.style.opacity = '0.5';
+
+                const token = sessionStorage.getItem('auth_token');
+                const res = await fetch(`${API_BASE}/sensors/${currentSensor}`, { 
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` } 
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    // Update UI immediately
+                    loadStats();
+                    setTimeout(() => {
+                        alert(`✅ Sukses: Riwayat Sensor 0${currentSensor} telah dikosongkan.`);
+                    }, 100);
+                } else {
+                    alert("❌ Gagal menghapus data: " + (data.error || "Unknown error"));
+                }
+            } catch(e) {
+                console.error('Clear data failed:', e);
+                alert("❌ Terjadi kesalahan koneksi.");
+            } finally {
+                // Restore button
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                btn.style.opacity = '1';
             }
+        }
 
-            if (!data || !Array.isArray(data) || !data.length) return;
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clock').textContent = now.toLocaleTimeString('id-ID');
+        }
+        
+        async function loadRecordingSettings() {
+            try {
+                const token = sessionStorage.getItem('auth_token');
+                const fetchSetting = async (key) => {
+                    const res = await fetch(`${API_BASE}/settings/${key}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const data = await res.json();
+                    return data.value;
+                };
 
-            const vs = data.map(r => parseFloat(r.voltage)).filter(v => !isNaN(v));
-            const is = data.map(r => parseFloat(r.current)).filter(v => !isNaN(v));
-            const ps = data.map(r => parseFloat(r.power)).filter(v => !isNaN(v));
-            const es = data.map(r => parseFloat(r.energy)).filter(v => !isNaN(v));
-            
-            if (!vs.length) return;
+                const interval = await fetchSetting(`recordInterval${currentSensor}`);
+                const isEnabled = await fetchSetting(`recordingEnabled${currentSensor}`);
 
-            const avg = arr => (arr.reduce((a,b)=>a+b,0)/arr.length);
+                if (interval && interval !== '0') {
+                    document.getElementById('recordInterval').value = interval;
+                }
+                if (isEnabled !== undefined) {
+                    document.getElementById('recordingEnabled').checked = (isEnabled === '1' || isEnabled === 'true');
+                }
+            } catch (e) {
+                console.error('Failed to load settings:', e);
+            }
+        }
 
-            document.getElementById('stat-vol-min').textContent = Math.min(...vs).toFixed(1) + ' V';
-            document.getElementById('stat-vol-max').textContent = Math.max(...vs).toFixed(1) + ' V';
-            document.getElementById('stat-vol-avg').textContent = avg(vs).toFixed(1) + ' V';
+        async function saveSetting(key, value) {
+            try {
+                const token = sessionStorage.getItem('auth_token');
+                await fetch(`${API_BASE}/settings/${key}${currentSensor}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ value: String(value) })
+                });
+            } catch (e) {
+                console.error(`Failed to save ${key}:`, e);
+            }
+        }
 
-            document.getElementById('stat-cur-min').textContent = Math.min(...is).toFixed(2) + ' A';
-            document.getElementById('stat-cur-max').textContent = Math.max(...is).toFixed(2) + ' A';
-            document.getElementById('stat-cur-avg').textContent = avg(is).toFixed(2) + ' A';
+        // Fix saveSetting to handle the key properly with sensor ID
+        async function saveSensorSetting(baseKey, value) {
+            const fullKey = `${baseKey}${currentSensor}`;
+            try {
+                const token = sessionStorage.getItem('auth_token');
+                await fetch(`${API_BASE}/settings/${fullKey}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ value: String(value) })
+                });
+            } catch (e) {
+                console.error(`Failed to save ${fullKey}:`, e);
+            }
+        }
 
-            document.getElementById('stat-pow-min').textContent = Math.min(...ps).toFixed(0) + ' W';
-            document.getElementById('stat-pow-max').textContent = Math.max(...ps).toFixed(0) + ' W';
-            document.getElementById('stat-pow-avg').textContent = avg(ps).toFixed(0) + ' W';
-            document.getElementById('stat-total-energy').textContent = Math.max(...es).toFixed(2) + ' kWh';
-            
-            const first = data[0];
-            document.getElementById('stat-freq').textContent = (parseFloat(first.frequency) || 50.0).toFixed(1) + 'Hz';
-            document.getElementById('stat-pf').textContent = (parseFloat(first.pf) || 0.00).toFixed(2) + 'PF';
+        document.getElementById('recordInterval').addEventListener('change', (e) => {
+            saveSensorSetting('recordInterval', e.target.value);
+        });
 
-        } catch(e) { 
-            console.error('Stats load failed:', e); 
+        document.getElementById('recordingEnabled').addEventListener('change', (e) => {
+            saveSensorSetting('recordingEnabled', e.target.checked ? '1' : '0');
+        });
+
+        setInterval(updateClock, 1000);
+        updateClock();
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const sParam = parseInt(urlParams.get('s'));
+        setSensor(sParam >= 1 && sParam <= 3 ? sParam : 1);
+    
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        document.getElementById('theme-toggle').innerHTML = newTheme === 'light' ? '🌙 Mode Gelap' : '🌞 Mode Terang';
+        
+        if (typeof chart !== 'undefined' && chart) {
+            chart.options.scales.y.grid.color = newTheme === 'light' ? '#e2e8f0' : '#222730';
+            chart.options.scales.y.ticks.color = newTheme === 'light' ? '#64748b' : '#5a6476';
+            chart.update();
         }
     }
-
-    function exportHistoryCSV() {
-        window.location.href = 'laporan-i40.html'; 
-    }
-
-    function updateClock() {
-      const now = new Date();
-      document.getElementById('clock').textContent = now.toLocaleTimeString('id-ID');
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-    loadStats();
-  </script>
-
+    window.addEventListener('DOMContentLoaded', () => {
+        const st = localStorage.getItem('theme');
+        if (st === 'light') {
+            const tt = document.getElementById('theme-toggle');
+            if(tt) tt.innerHTML = '🌙 Mode Gelap';
+        }
+    });
+</script>
 </body>
 </html>

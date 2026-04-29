@@ -1,35 +1,24 @@
 const axios = require('axios');
 
-async function testRelay() {
+async function toggleRelay(id, state) {
   const baseURL = 'http://localhost:3000/api';
-  
   try {
-    console.log('Logging in...');
     const loginRes = await axios.post(`${baseURL}/auth/login`, {
       username: 'admin',
       password: 'admin123'
     });
-    
     const token = loginRes.data.token;
-    console.log('Login successful.');
-
     const headers = { Authorization: `Bearer ${token}` };
 
-    console.log('Turning Relay 1 ON...');
-    const onRes = await axios.put(`${baseURL}/relays/1`, { state: 1 }, { headers });
-    console.log('Response:', onRes.data);
-
-    console.log('Waiting 3 seconds...');
-    await new Promise(r => setTimeout(r, 3000));
-
-    console.log('Turning Relay 1 OFF...');
-    const offRes = await axios.put(`${baseURL}/relays/1`, { state: 0 }, { headers });
-    console.log('Response:', offRes.data);
-
-    console.log('Test completed successfully!');
+    console.log(`Toggling Relay ${id} to ${state ? 'ON' : 'OFF'}...`);
+    const res = await axios.put(`${baseURL}/relays/${id}`, { state }, { headers });
+    console.log('Server response:', res.data);
   } catch (err) {
-    console.error('Test failed:', err.response ? err.response.data : err.message);
+    console.error('Failed:', err.response ? err.response.data : err.message);
   }
 }
 
-testRelay();
+const relayId = process.argv[2] || 3;
+const relayState = process.argv[3] === 'on' ? 1 : 0;
+
+toggleRelay(relayId, relayState);

@@ -5,17 +5,17 @@
 // ============================================================
 
 // --- WiFi ---
-#define WIFI_SSID     "Faiz"
+#define WIFI_SSID     "IQBAL"
 #define WIFI_PASSWORD "12345678"
 
 // --- IP Static ESP32 (Agar Server Selalu Tahu IP ESP32) ---
 #define USE_STATIC_IP true
-#define ESP_IP        192, 168, 100, 100
-#define ESP_GATEWAY   192, 168, 100, 1
+#define ESP_IP        10, 10, 40, 200
+#define ESP_GATEWAY   10, 10, 40, 1
 #define ESP_SUBNET    255, 255, 255, 0
 
 // --- Server Node.js (IP Laptop/PC Anda) ---
-#define SERVER_HOST   "192.168.100.25"
+#define SERVER_HOST   "10.10.40.248"
 #define SERVER_PORT   3000
 #define SERVER_BASE   "http://" SERVER_HOST ":" STRINGIFY(SERVER_PORT)
 
@@ -23,9 +23,27 @@
 #define ESP_USERNAME  "admin"
 #define ESP_PASSWORD  "admin123"
 
-// --- Pin PZEM-004T ---
-#define PZEM_RX_PIN   16   // ESP32 RX2 <- TX PZEM
-#define PZEM_TX_PIN   17   // ESP32 TX2 -> RX PZEM
+// --- PZEM 1 ---
+#define PZEM1_RX_PIN   33
+#define PZEM1_TX_PIN   32
+
+// --- PZEM 2 ---
+#define PZEM2_RX_PIN   19
+#define PZEM2_TX_PIN   18
+
+
+// --- PZEM 3 ---
+#define PZEM3_RX_PIN   16
+#define PZEM3_TX_PIN   17
+
+// --- Multi Sensor Config ---
+#define NUM_SENSORS  3
+#define SENSOR1_RX   PZEM1_RX_PIN
+#define SENSOR1_TX   PZEM1_TX_PIN
+#define SENSOR2_RX   PZEM2_RX_PIN
+#define SENSOR2_TX   PZEM2_TX_PIN
+#define SENSOR3_RX   PZEM3_RX_PIN
+#define SENSOR3_TX   PZEM3_TX_PIN
 
 // --- Pin Relay (Active LOW) ---
 #define RELAY1_PIN    14

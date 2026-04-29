@@ -16,7 +16,29 @@
             --text-dim: #5a6476;
             --accent: #4da6ff;
             --amber: #f5a623;
+            --green: #2ecc71;
+            --nav-active-bg: rgba(77, 166, 255, 0.1);
         }
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --sidebar: #ffffff;
+            --card: #ffffff;
+            --panel: #ffffff;
+            --border: #e2e8f0;
+            --border2: #cbd5e1;
+            --text-main: #0f172a;
+            --text: #0f172a;
+            --text-dim: #64748b;
+            --muted: #64748b;
+            --accent: #2563eb;
+            --amber: #d97706;
+            --green: #059669;
+            --red: #dc2626;
+            --blue: #2563eb;
+            --nav-active-bg: rgba(37, 99, 235, 0.1);
+        }
+    
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -48,7 +70,7 @@
         .sidebar-brand h2 { font-size: 14px; color: var(--text-main); margin-bottom: 10px; }
 
         .brand-info {
-            font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim);
+            font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--text-dim);
             display: flex; flex-direction: column; gap: 4px;
         }
 
@@ -60,13 +82,37 @@
         }
 
         .nav-item:hover { color: var(--text-main); }
-        .nav-item.active { background-color: rgba(77, 166, 255, 0.1); color: var(--accent); }
+        .nav-item.active { background-color: var(--nav-active-bg); color: var(--accent); }
 
         /* ── MAIN CONTENT ── */
         .content { flex: 1; padding: 30px; max-width: 1200px; }
 
-        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .page-title { font-size: 20px; font-weight: 600; }
+
+        /* ── TABS ── */
+        .sensor-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+
+        .tab-btn:hover { border-color: var(--accent); color: var(--text-main); }
+        .tab-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
 
         .chart-box {
             background-color: var(--card);
@@ -91,7 +137,7 @@
             text-align: center;
         }
 
-        .stat-lab { font-size: 10px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
+        .stat-lab { font-size: 12px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
         .stat-val { font-size: 20px; font-weight: 600; font-family: 'IBM Plex Mono'; }
 
         @media (max-width: 1000px) {
@@ -100,6 +146,11 @@
             .sidebar { width: 100%; border-right: none; }
         }
     </style>
+
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
 </head>
 <body>
 
@@ -110,40 +161,49 @@
             <div class="brand-info">
                 <span>| NODE ESP32 DevKit</span>
                 <span>| RELAY 4 Channel</span>
-                <span>| SENSOR PZEM-004T</span>
+                <span>| 3x SENSOR PZEM-004T</span>
             </div>
         </div>
 
         <nav class="nav-menu">
             <a href="relay-control-i40.html" class="nav-item">◄ Dasbor</a>
-            <a href="monitoring-i40.html" class="nav-item active">📊 Monitor</a>
+            <a href="monitoring-i40.html?s=1" class="nav-item" id="nav-s1">📊 Monitor S1</a>
+            <a href="monitoring-i40.html?s=2" class="nav-item" id="nav-s2">📊 Monitor S2</a>
+            <a href="monitoring-i40.html?s=3" class="nav-item" id="nav-s3">📊 Monitor S3</a>
             <a href="statistics-i40.html" class="nav-item">📈 Statistik</a>
             <a href="laporan-i40.html" class="nav-item">📋 Laporan</a>
             <br>
-            <a href="#" onclick="logout()" class="nav-item" style="color: var(--red);">Logout</a>
+            <a href="#" onclick="toggleTheme()" class="nav-item" id="theme-toggle">🌞 Mode Terang</a>
+            <a href="#" onclick="logout()" class="nav-item" style="color: #ff4d4d;">Logout</a>
         </nav>
     </div>
 
     <div class="content">
         <div class="page-header">
-            <h1 class="page-title">Live Performance Analysis</h1>
+            <h1 class="page-title">Pantau Listrik Langsung</h1>
+        </div>
+
+        <div class="sensor-tabs">
+            <button class="tab-btn active" onclick="setSensor(1)">Sensor 1</button>
+            <button class="tab-btn" onclick="setSensor(2)">Sensor 2</button>
+            <button class="tab-btn" onclick="setSensor(3)">Sensor 3</button>
         </div>
 
         <div class="grid">
             <div class="stat-card">
-                <div class="stat-lab">Voltage</div>
+                <div class="stat-lab">Tegangan (V)</div>
                 <div class="stat-val" id="v">0.0V</div>
             </div>
             <div class="stat-card">
-                <div class="stat-lab">Current</div>
+                <div class="stat-lab">Arus (A)</div>
                 <div class="stat-val" id="i">0.00A</div>
             </div>
             <div class="stat-card">
-                <div class="stat-lab">Power</div>
+                <div class="stat-lab">Daya (Watt)</div>
                 <div class="stat-val" id="p" style="color: var(--amber);">0W</div>
             </div>
             <div class="stat-card">
-                <div class="stat-lab">Energy</div>
+                <div class="stat-lab">Total Listrik</div>
                 <div class="stat-val" id="e" style="color: var(--accent);">0.000kWh</div>
             </div>
         </div>
@@ -155,7 +215,34 @@
 
     <script>
         const API_BASE = '/api';
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('theme-toggle').innerHTML = newTheme === 'light' ? '🌙 Mode Gelap' : '🌞 Mode Terang';
+            
+            if (chart) {
+                chart.options.scales.y.grid.color = newTheme === 'light' ? '#e2e8f0' : '#222730';
+                chart.options.scales.y.ticks.color = newTheme === 'light' ? '#64748b' : '#5a6476';
+                if (chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+                    chart.options.plugins.legend.labels.color = newTheme === 'light' ? '#0f172a' : '#d0d8e4';
+                }
+                chart.update();
+            }
+        }
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            const st = localStorage.getItem('theme');
+            if (st === 'light') {
+                const tt = document.getElementById('theme-toggle');
+                if(tt) tt.innerHTML = '🌙 Mode Gelap';
+            }
+        });
+
         let chart;
+        let currentSensor = 1;
 
         function initChart() {
             const ctx = document.getElementById('liveChart').getContext('2d');
@@ -183,6 +270,23 @@
             });
         }
 
+        function setSensor(sid) {
+            currentSensor = sid;
+            document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+                btn.classList.toggle('active', (idx + 1) === sid);
+            });
+            // Update sidebar active state
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            const activeNav = document.getElementById(`nav-s${sid}`);
+            if (activeNav) activeNav.classList.add('active');
+
+            // Clear chart on sensor change for clarity
+            chart.data.labels = [];
+            chart.data.datasets[0].data = [];
+            chart.update();
+            updateData();
+        }
+
         async function updateData() {
             try {
                 const token = sessionStorage.getItem('auth_token');
@@ -191,17 +295,21 @@
                     return;
                 }
 
+                // Ambil data semua sensor
                 const res = await fetch(`${API_BASE}/sensors/latest`, { 
                     headers: { 'Authorization': `Bearer ${token}` } 
                 });
-                const data = await res.json();
+                const dataAll = await res.json();
 
-                if (data && data.error === 'Invalid token') {
+                if (dataAll && dataAll.error === 'Invalid token') {
                     window.location.href = 'login.html';
                     return;
                 }
 
-                if (data && data.id) {
+                // Ambil data sesuai sensor yang aktif
+                const data = dataAll[`sensor${currentSensor}`];
+
+                if (data) {
                     const vVal = parseFloat(data.voltage) || 0;
                     const iVal = parseFloat(data.current) || 0;
                     const pVal = parseFloat(data.power) || 0;
@@ -222,6 +330,12 @@
                         }
                         chart.update('none');
                     }
+                } else {
+                    // Jika data sensor ini null/belum ada
+                    document.getElementById('v').textContent = '---';
+                    document.getElementById('i').textContent = '---';
+                    document.getElementById('p').textContent = '---';
+                    document.getElementById('e').textContent = '---';
                 }
             } catch(e) {
                 console.error('Update monitoring data failed:', e);
@@ -231,8 +345,17 @@
         function logout() { sessionStorage.clear(); window.location.href = 'login.html'; }
 
         initChart();
+        
+        // Handle URL Parameter for Sensor Selection
+        const urlParams = new URLSearchParams(window.location.search);
+        const sParam = parseInt(urlParams.get('s'));
+        if (sParam >= 1 && sParam <= 3) {
+            setSensor(sParam);
+        } else {
+            updateData();
+        }
+
         setInterval(updateData, 2000);
-        updateData();
     </script>
 </body>
 </html>

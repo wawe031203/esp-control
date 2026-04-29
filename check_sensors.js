@@ -10,9 +10,22 @@ async function checkSensors() {
     const token = loginRes.data.token;
     const headers = { Authorization: `Bearer ${token}` };
 
-    console.log('Fetching latest sensor data...');
+    console.log('Fetching latest sensor data (All 3 Sensors)...');
     const res = await axios.get(`${baseURL}/sensors/latest`, { headers });
-    console.log('Latest Sensor Data:', res.data);
+    
+    for (let i = 1; i <= 3; i++) {
+        const data = res.data[`sensor${i}`];
+        if (data) {
+            console.log(`\n--- SENSOR ${i} ---`);
+            console.log(`Voltage: ${data.voltage}V`);
+            console.log(`Current: ${data.current}A`);
+            console.log(`Power:   ${data.power}W`);
+            console.log(`Energy:  ${data.energy}kWh`);
+        } else {
+            console.log(`\n--- SENSOR ${i} ---`);
+            console.log('No data available.');
+        }
+    }
   } catch (err) {
     console.error('Failed:', err.response ? err.response.data : err.message);
   }

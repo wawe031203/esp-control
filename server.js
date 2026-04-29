@@ -15,6 +15,24 @@ app.use(express.json());
 
 const axios = require('axios');
 
+let latestSensorData = [null, null, null];
+let lastRecordTimes = [0, 0, 0];
+
+// ── ESP32 Push Helper ──────────────────────────────────────
+const ESP32_IP = (process.env.ESP32_IP || '10.10.40.200').split(/[\s#]/)[0].trim();
+
+async function pushRelayToESP32(id, state) {
+    try {
+        await axios.post(`http://${ESP32_IP}/relay/${id}`, { state: state ? 1 : 0 }, { timeout: 7000 });
+        console.log(`📡 Push ESP32 Relay ${id}: ${state ? 'ON' : 'OFF'} OK`);
+        return { success: true };
+    } catch (e) {
+        console.warn(`⚠  Push ESP32 Relay ${id} FAILED:`, e.message);
+        if (e.response) console.warn('Response data:', e.response.data);
+        return { success: false, error: e.message };
+    }
+}
+
 
 // Redirect root to login
 app.get('/', (req, res) => {
@@ -44,24 +62,36 @@ async function initDB() {
       level ENUM('admin','operator')
     )
   `);
-  await connection.execute(`
-    CREATE TABLE IF NOT EXISTS sensors (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-      voltage DECIMAL(6,2),
-      current DECIMAL(6,3),
-      power DECIMAL(8,2),
-      energy DECIMAL(10,3),
-      frequency DECIMAL(5,2),
-      pf DECIMAL(4,3)
-    )
-  `);
+// Multi sensor tables
+    for(let sid=1; sid<=3; sid++) {
+      await connection.execute(`
+        CREATE TABLE IF NOT EXISTS sensors${sid} (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+          voltage DECIMAL(6,2),
+          current DECIMAL(6,3),
+          power DECIMAL(8,2),
+          energy DECIMAL(10,3),
+          frequency DECIMAL(5,2),
+          pf DECIMAL(4,3)
+        )`
+      );
+    }
+    // Migrate old to sensors1 if exists
+    try {
+      await connection.query('RENAME TABLE sensors TO sensors_old');
+      await connection.query('RENAME TABLE sensors_old TO sensors1');
+    } catch (e) {
+      // ignore if not exist
+    }
 
-  // Tambah kolom baru jika belum ada (untuk update schema lama)
-  try {
-    await connection.execute('ALTER TABLE sensors ADD COLUMN IF NOT EXISTS frequency DECIMAL(5,2)');
-    await connection.execute('ALTER TABLE sensors ADD COLUMN IF NOT EXISTS pf DECIMAL(4,3)');
-  } catch(e) { /* kolom sudah ada */ }
+// Fix columns for all sensors
+  for(let sid=1; sid<=3; sid++) {
+    try {
+      await connection.execute(`ALTER TABLE sensors${sid} ADD COLUMN IF NOT EXISTS frequency DECIMAL(5,2)`);
+      await connection.execute(`ALTER TABLE sensors${sid} ADD COLUMN IF NOT EXISTS pf DECIMAL(4,3)`);
+    } catch(e) {}
+  }
   await connection.execute(`
     CREATE TABLE IF NOT EXISTS relays (
       id TINYINT PRIMARY KEY,
@@ -92,8 +122,12 @@ async function initDB() {
   const hash = bcrypt.hashSync('admin123', 10);
   await connection.execute('INSERT IGNORE INTO users VALUES (1, "admin", ?, "admin")', [hash]);
 
-  // Default settings
+// Default settings
   await connection.execute('INSERT IGNORE INTO settings (key_name, value) VALUES ("electricity_tariff", "1444.7")');
+  for(let sid=1; sid<=3; sid++) {
+    await connection.execute('INSERT IGNORE INTO settings (key_name, value) VALUES (?, "1")', [`recordingEnabled${sid}`]);
+    await connection.execute('INSERT IGNORE INTO settings (key_name, value) VALUES (?, "60")', [`recordInterval${sid}`]);
+  }
   
   // Init relays
   for (let i = 1; i <= 4; i++) {
@@ -125,6 +159,7 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     const token = jwt.sign({ id: user.id, username: user.username, level: user.level }, JWT_SECRET, { expiresIn: '30m' });
+    console.log(`🔓 User ${username} logged in from ${req.socket.remoteAddress}`);
     res.json({ token, user: { id: user.id, username: user.username, level: user.level } });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -149,42 +184,114 @@ app.use('/api', (req, res, next) => {
   }
 });
 
-app.get('/api/sensors', async (req, res) => {
+// --- MOVED LATEST ENDPOINT UP ---
+app.get('/api/sensors/latest/:sid?', async (req, res) => {
+  const sid = req.params.sid ? parseInt(req.params.sid) : null;
   try {
+    if (sid && (sid < 1 || sid > 3)) return res.status(400).json({error: 'Sensor ID 1-3'});
+    
+    if (!sid) {
+      // All latest
+      const allLatest = {};
+      for(let s=1; s<=3; s++) {
+        const cache = latestSensorData[s-1];
+        if (cache) {
+          allLatest[`sensor${s}`] = cache;
+        } else {
+          const [rows] = await pool.execute(`SELECT * FROM sensors${s} ORDER BY id DESC LIMIT 1`);
+          allLatest[`sensor${s}`] = rows[0] || null;
+        }
+      }
+      res.json(allLatest);
+    } else {
+      const cache = latestSensorData[sid-1];
+      if (cache) return res.json(cache);
+      const [rows] = await pool.execute(`SELECT * FROM sensors${sid} ORDER BY id DESC LIMIT 1`);
+      res.json(rows[0] || null);
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/sensors/:sid?', async (req, res) => {
+  const sid = req.params.sid ? parseInt(req.params.sid) : null;
+  try {
+    if (sid && (sid < 1 || sid > 3)) return res.status(400).json({error: 'Sensor ID 1-3'});
+    
     const limit = parseInt(req.query.limit) || 100;
-    const [rows] = await pool.execute('SELECT * FROM sensors ORDER BY id DESC LIMIT ?', [limit]);
-    res.json(rows);
+    if (sid) {
+      const [rows] = await pool.query(`SELECT * FROM sensors${sid} ORDER BY id DESC LIMIT ?`, [limit]);
+      res.json(rows);
+    } else {
+      // All sensors combined
+      const subLimit = Math.floor(limit / 3);
+      const [rows] = await pool.query(`
+        (SELECT *, 1 as sensor_id FROM sensors1 ORDER BY id DESC LIMIT ?) 
+        UNION ALL (SELECT *, 2 as sensor_id FROM sensors2 ORDER BY id DESC LIMIT ?)
+        UNION ALL (SELECT *, 3 as sensor_id FROM sensors3 ORDER BY id DESC LIMIT ?)
+        ORDER BY timestamp DESC
+        LIMIT ?
+      `, [subLimit, subLimit, subLimit, limit]);
+      res.json(rows);
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Endpoint untuk polling data terbaru (real-time monitoring)
-app.get('/api/sensors/latest', async (req, res) => {
+app.delete('/api/sensors/:sid?', async (req, res) => {
+  const sid = req.params.sid ? parseInt(req.params.sid) : null;
   try {
-    const [rows] = await pool.execute('SELECT * FROM sensors ORDER BY id DESC LIMIT 1');
-    if (rows.length === 0) return res.json(null);
-    res.json(rows[0]);
+    if (sid && (sid < 1 || sid > 3)) return res.status(400).json({error: 'Sensor ID 1-3'});
+    
+    if (sid) {
+      await pool.execute(`TRUNCATE TABLE sensors${sid}`);
+    } else {
+      for(let s=1; s<=3; s++) await pool.execute(`TRUNCATE TABLE sensors${s}`);
+    }
+    res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-app.post('/api/sensors', async (req, res) => {
+
+app.post('/api/sensors/:sid', async (req, res) => {
+  const sid = parseInt(req.params.sid);
+  if (sid < 1 || sid > 3) return res.status(400).json({error: 'Sensor ID 1-3'});
+  
   const { voltage, current, power, energy, frequency, pf } = req.body;
   try {
-    const [result] = await pool.execute(
-      'INSERT INTO sensors (voltage, current, power, energy, frequency, pf) VALUES (?, ?, ?, ?, ?, ?)',
-      [
-        voltage  ?? null,
-        current  ?? null,
-        power    ?? null,
-        energy   ?? null,
-        frequency ?? null,
-        pf       ?? null
-      ]
-    );
-    res.json({ id: result.insertId });
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    console.log(`📥 Sensor${sid} from ${ip}: V=${voltage}V I=${current}A P=${power}W`);
+    
+    // Update cache
+    latestSensorData[sid-1] = {
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      voltage, current, power, energy, frequency, pf
+    };
+
+    // Recording
+    const [settingRows] = await pool.execute('SELECT * FROM settings WHERE key_name LIKE "recordingEnabled%" OR key_name LIKE "recordInterval%"');
+    let recEnabled = true, recInterval = 60;
+    settingRows.forEach(r => {
+      if (r.key_name === `recordingEnabled${sid}`) recEnabled = r.value === '1';
+      if (r.key_name === `recordInterval${sid}`) recInterval = parseInt(r.value) || 60;
+    });
+
+    const now = Date.now();
+    if (recEnabled && (now - lastRecordTimes[sid-1] >= recInterval*1000)) {
+      lastRecordTimes[sid-1] = now;
+      const [result] = await pool.execute(
+        `INSERT INTO sensors${sid} (voltage, current, power, energy, frequency, pf) VALUES (?, ?, ?, ?, ?, ?)`,
+        [voltage ?? null, current ?? null, power ?? null, energy ?? null, frequency ?? null, pf ?? null]
+      );
+      res.json({ id: result.insertId, recorded: true });
+    } else {
+      res.json({ id: null, recorded: false });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -225,11 +332,7 @@ app.put('/api/relays/:id', async (req, res) => {
     res.json(rows[0]);
 
     // Push ke ESP32 secara async background
-    const ESP32_IP = (process.env.ESP32_IP || '192.168.1.100').split(/[\s#]/)[0].trim();
-    const axios = require('axios');
-    axios.post(`http://${ESP32_IP}/relay/${id}`, { state: state ? 1 : 0 }, { timeout: 3000 })
-      .then(() => console.log(`📡 Push ESP32 Relay ${id}: ${state ? 'ON' : 'OFF'}`))
-      .catch(e  => console.warn(`⚠  Push ESP32 (polling mode ok): ${e.message}`));
+    pushRelayToESP32(id, state);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -278,9 +381,14 @@ app.listen(PORT, () => {
 
   console.log(`🚀 Server: http://localhost:${PORT}`);
   
-  // SCHEDULER HEARTBEAT (Every 1 minute)
+  // SCHEDULER HEARTBEAT (Every 1 second for zero delay)
+  let lastScheduleMin = -1;
   setInterval(async () => {
     const now = new Date();
+    // Gunakan deteksi perubahan menit agar hanya terpicu 1x tepat saat menit berubah
+    if (now.getMinutes() === lastScheduleMin) return;
+    lastScheduleMin = now.getMinutes();
+
     const currentTime = now.toTimeString().split(' ')[0].substring(0, 5); // HH:mm
     
     try {
@@ -294,15 +402,14 @@ app.listen(PORT, () => {
         else if (currentTime === offT) targetState = 0;
 
         if (targetState !== -1) {
-          console.log(`⏰ Schedule Triggered! Relay ${task.relay_id} -> ${targetState === 1 ? 'ON' : 'OFF'}`);
+          console.log(`⏰ Schedule Triggered! Relay ${task.relay_id} -> ${targetState === 1 ? 'ON' : 'OFF'} at ${currentTime}`);
           await pool.execute('UPDATE relays SET state = ? WHERE id = ?', [targetState, task.relay_id]);
           
-          const ESP32_IP = (process.env.ESP32_IP || '192.168.1.100').split(/[\s#]/)[0].trim();
-          axios.post(`http://${ESP32_IP}/relay/${task.relay_id}`, { state: targetState }, { timeout: 2000 }).catch(() => {});
+          pushRelayToESP32(task.relay_id, targetState === 1);
         }
       }
     } catch (e) { console.error('Scheduler Error:', e.message); }
-  }, 60000);
+  }, 1000); // 1 detik polling
 });
 
 
